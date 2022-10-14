@@ -1,0 +1,23 @@
+{
+  "name": "hardhat-project",
+  "devDependencies": {
+    "hardhat": "^2.11.2"
+  },
+  "dependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^2.0.0",
+    "@openzeppelin/contracts": "^4.7.3",
+    "@openzeppelin/contracts-upgradeable": "^4.8.0-rc.1",
+    "@openzeppelin/hardhat-upgrades": "^1.21.0",
+    "bigint-buffer": "^1.1.5",
+    "chai": "^4.3.6",
+    "circomlibjs": "^0.1.7",
+    "crypto": "^1.0.1",
+    "ffjavascript": "^0.2.56",
+    "hardhat-gas-reporter": "^1.0.9",
+    "mocha": "^10.0.0",
+    "snarkjs": "^0.5.0",
+    "solidity-bytes-utils": "^0.8.0",
+    "wasmsnark": "^0.0.10",
+    "zidenjs": "file:pkg/zidenjs-1.0.0.tgz"
+  }
+}
