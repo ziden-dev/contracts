@@ -8,7 +8,7 @@ import "../interfaces/IQueryVerifier.sol";
 import "../interfaces/IState.sol";
 import "hardhat/console.sol";
 
-contract Validator is OwnableUpgradeable, IValidator{
+contract QueryMTPValidator is OwnableUpgradeable, IValidator{
   string constant CIRCUIT_ID = "credentialAtomicQuery";
   uint256 constant CHALLENGE_INDEX = 2;
   uint256 constant USER_ID_INDEX = 1;

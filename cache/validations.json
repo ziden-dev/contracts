@@ -2,6 +2,836 @@
   "version": "3.3",
   "log": [
     {
+      "IValidator": {
+        "src": "contracts/interfaces/IValidator.sol:4",
+        "inherit": [],
+        "libraries": [],
+        "methods": [
+          "verify(uint256[2],uint256[2][2],uint256[2],uint256[9],(uint256,uint256,uint256,string))",
+          "getCircuitId()",
+          "getChallengeInputIndex()",
+          "getUserIdInputIndex()"
+        ],
+        "linkReferences": [],
+        "errors": [],
+        "layout": {
+          "storage": [],
+          "types": {},
+          "layoutVersion": "1.1",
+          "flat": false
+        },
+        "solcVersion": "0.8.7"
+      },
+      "TestValidator": {
+        "src": "contracts/test/TestValidator.sol:6",
+        "version": {
+          "withMetadata": "fe5a1bef44506ec3766c07cde493bbf28ddb82f3c8746b41edc7a527ce238277",
+          "withoutMetadata": "c10f331784e8cd5acdd0b4a30b038c33431f25685e1a7fa7bfe89cc097282fa9",
+          "linkedWithoutMetadata": "c10f331784e8cd5acdd0b4a30b038c33431f25685e1a7fa7bfe89cc097282fa9"
+        },
+        "inherit": [],
+        "libraries": [],
+        "methods": [
+          "(address,address)",
+          "verifyMTP(uint256[2],uint256[2][2],uint256[2],uint256[9])",
+          "verifySig(uint256[2],uint256[2][2],uint256[2],uint256[9])"
+        ],
+        "linkReferences": [],
+        "errors": [
+          {
+            "kind": "constructor",
+            "contract": "TestValidator",
+            "src": "contracts/test/TestValidator.sol:10"
+          }
+        ],
+        "layout": {
+          "storage": [
+            {
+              "label": "owner",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_address",
+              "contract": "TestValidator",
+              "src": "contracts/test/TestValidator.sol:7"
+            },
+            {
+              "label": "mtpValidator",
+              "offset": 0,
+              "slot": "1",
+              "type": "t_contract(IValidator)52",
+              "contract": "TestValidator",
+              "src": "contracts/test/TestValidator.sol:8"
+            },
+            {
+              "label": "sigValidator",
+              "offset": 0,
+              "slot": "2",
+              "type": "t_contract(IValidator)52",
+              "contract": "TestValidator",
+              "src": "contracts/test/TestValidator.sol:9"
+            }
+          ],
+          "types": {
+            "t_address": {
+              "label": "address",
+              "numberOfBytes": "20"
+            },
+            "t_contract(IValidator)52": {
+              "label": "contract IValidator",
+              "numberOfBytes": "20"
+            }
+          },
+          "layoutVersion": "1.1",
+          "flat": true
+        },
+        "solcVersion": "0.8.7"
+      }
+    },
+    {
+      "OwnableUpgradeable": {
+        "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:21",
+        "inherit": [
+          "ContextUpgradeable",
+          "Initializable"
+        ],
+        "libraries": [],
+        "methods": [
+          "owner()",
+          "renounceOwnership()",
+          "transferOwnership(address)"
+        ],
+        "linkReferences": [],
+        "errors": [],
+        "layout": {
+          "storage": [
+            {
+              "label": "_initialized",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_uint8",
+              "contract": "Initializable",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+              "retypedFrom": "bool"
+            },
+            {
+              "label": "_initializing",
+              "offset": 1,
+              "slot": "0",
+              "type": "t_bool",
+              "contract": "Initializable",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+            },
+            {
+              "label": "__gap",
+              "offset": 0,
+              "slot": "1",
+              "type": "t_array(t_uint256)50_storage",
+              "contract": "ContextUpgradeable",
+              "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+            },
+            {
+              "label": "_owner",
+              "offset": 0,
+              "slot": "51",
+              "type": "t_address",
+              "contract": "OwnableUpgradeable",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+            },
+            {
+              "label": "__gap",
+              "offset": 0,
+              "slot": "52",
+              "type": "t_array(t_uint256)49_storage",
+              "contract": "OwnableUpgradeable",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+            }
+          ],
+          "types": {
+            "t_address": {
+              "label": "address",
+              "numberOfBytes": "20"
+            },
+            "t_array(t_uint256)49_storage": {
+              "label": "uint256[49]",
+              "numberOfBytes": "1568"
+            },
+            "t_array(t_uint256)50_storage": {
+              "label": "uint256[50]",
+              "numberOfBytes": "1600"
+            },
+            "t_bool": {
+              "label": "bool",
+              "numberOfBytes": "1"
+            },
+            "t_uint256": {
+              "label": "uint256",
+              "numberOfBytes": "32"
+            },
+            "t_uint8": {
+              "label": "uint8",
+              "numberOfBytes": "1"
+            }
+          },
+          "layoutVersion": "1.1",
+          "flat": true
+        },
+        "solcVersion": "0.8.7"
+      },
+      "Initializable": {
+        "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:57",
+        "inherit": [],
+        "libraries": [
+          "AddressUpgradeable"
+        ],
+        "methods": [],
+        "linkReferences": [],
+        "errors": [],
+        "layout": {
+          "storage": [
+            {
+              "label": "_initialized",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_uint8",
+              "contract": "Initializable",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+              "retypedFrom": "bool"
+            },
+            {
+              "label": "_initializing",
+              "offset": 1,
+              "slot": "0",
+              "type": "t_bool",
+              "contract": "Initializable",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+            }
+          ],
+          "types": {
+            "t_bool": {
+              "label": "bool",
+              "numberOfBytes": "1"
+            },
+            "t_uint8": {
+              "label": "uint8",
+              "numberOfBytes": "1"
+            }
+          },
+          "layoutVersion": "1.1",
+          "flat": true
+        },
+        "solcVersion": "0.8.7"
+      },
+      "AddressUpgradeable": {
+        "src": "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol:9",
+        "version": {
+          "withMetadata": "a8f2a469438fd9e44f6a1f0fd5b57391df80ac2fd15f20b8dc8e065d5e16e315",
+          "withoutMetadata": "a64c6cf9c6ba9368f5132c93a0196b3204a7963dbb4dd05dfddb4ab23126b8db",
+          "linkedWithoutMetadata": "a64c6cf9c6ba9368f5132c93a0196b3204a7963dbb4dd05dfddb4ab23126b8db"
+        },
+        "inherit": [],
+        "libraries": [],
+        "methods": [],
+        "linkReferences": [],
+        "errors": [],
+        "layout": {
+          "storage": [],
+          "types": {},
+          "layoutVersion": "1.1",
+          "flat": false
+        },
+        "solcVersion": "0.8.7"
+      },
+      "ContextUpgradeable": {
+        "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:17",
+        "inherit": [
+          "Initializable"
+        ],
+        "libraries": [],
+        "methods": [],
+        "linkReferences": [],
+        "errors": [],
+        "layout": {
+          "storage": [
+            {
+              "label": "_initialized",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_uint8",
+              "contract": "Initializable",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+              "retypedFrom": "bool"
+            },
+            {
+              "label": "_initializing",
+              "offset": 1,
+              "slot": "0",
+              "type": "t_bool",
+              "contract": "Initializable",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+            },
+            {
+              "label": "__gap",
+              "offset": 0,
+              "slot": "1",
+              "type": "t_array(t_uint256)50_storage",
+              "contract": "ContextUpgradeable",
+              "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+            }
+          ],
+          "types": {
+            "t_array(t_uint256)50_storage": {
+              "label": "uint256[50]",
+              "numberOfBytes": "1600"
+            },
+            "t_bool": {
+              "label": "bool",
+              "numberOfBytes": "1"
+            },
+            "t_uint256": {
+              "label": "uint256",
+              "numberOfBytes": "32"
+            },
+            "t_uint8": {
+              "label": "uint8",
+              "numberOfBytes": "1"
+            }
+          },
+          "layoutVersion": "1.1",
+          "flat": true
+        },
+        "solcVersion": "0.8.7"
+      },
+      "IQueryVerifier": {
+        "src": "contracts/interfaces/IQueryVerifier.sol:4",
+        "inherit": [],
+        "libraries": [],
+        "methods": [
+          "verifyProof(uint256[2],uint256[2][2],uint256[2],uint256[9])"
+        ],
+        "linkReferences": [],
+        "errors": [],
+        "layout": {
+          "storage": [],
+          "types": {},
+          "layoutVersion": "1.1",
+          "flat": false
+        },
+        "solcVersion": "0.8.7"
+      },
+      "IState": {
+        "src": "contracts/interfaces/IState.sol:4",
+        "inherit": [],
+        "libraries": [],
+        "methods": [
+          "getState(uint256)",
+          "getTransitionInfo(uint256)"
+        ],
+        "linkReferences": [],
+        "errors": [],
+        "layout": {
+          "storage": [],
+          "types": {},
+          "layoutVersion": "1.1",
+          "flat": false
+        },
+        "solcVersion": "0.8.7"
+      },
+      "IValidator": {
+        "src": "contracts/interfaces/IValidator.sol:4",
+        "inherit": [],
+        "libraries": [],
+        "methods": [
+          "verify(uint256[2],uint256[2][2],uint256[2],uint256[9],(uint256,uint256,uint256,string))",
+          "getCircuitId()",
+          "getChallengeInputIndex()",
+          "getUserIdInputIndex()"
+        ],
+        "linkReferences": [],
+        "errors": [],
+        "layout": {
+          "storage": [],
+          "types": {},
+          "layoutVersion": "1.1",
+          "flat": false
+        },
+        "solcVersion": "0.8.7"
+      },
+      "GenesisUtils": {
+        "src": "contracts/lib/GenesisUtil.sol:6",
+        "version": {
+          "withMetadata": "b44ffafaf07867b39f0105125ed8ebeab0b40ec543398e8c3dd8828f8d6e1bd9",
+          "withoutMetadata": "a64c6cf9c6ba9368f5132c93a0196b3204a7963dbb4dd05dfddb4ab23126b8db",
+          "linkedWithoutMetadata": "a64c6cf9c6ba9368f5132c93a0196b3204a7963dbb4dd05dfddb4ab23126b8db"
+        },
+        "inherit": [],
+        "libraries": [
+          "GenesisUtils",
+          "BytesLib"
+        ],
+        "methods": [],
+        "linkReferences": [],
+        "errors": [],
+        "layout": {
+          "storage": [],
+          "types": {},
+          "layoutVersion": "1.1",
+          "flat": false
+        },
+        "solcVersion": "0.8.7"
+      },
+      "QueryMTPValidator": {
+        "src": "contracts/validators/QueryMTPValidator.sol:11",
+        "version": {
+          "withMetadata": "26e6beab6c70d644680066481567757530d6092a08a6b8ff9038800af5fea418",
+          "withoutMetadata": "fd213c2f87e5988cb513079bdfc46d4ab678d76492b4d69702b35fe27aec201e",
+          "linkedWithoutMetadata": "fd213c2f87e5988cb513079bdfc46d4ab678d76492b4d69702b35fe27aec201e"
+        },
+        "inherit": [
+          "IValidator",
+          "OwnableUpgradeable",
+          "ContextUpgradeable",
+          "Initializable"
+        ],
+        "libraries": [
+          "GenesisUtils"
+        ],
+        "methods": [
+          "initialize(address,address)",
+          "setRevocationStateExpirationTime(uint256)",
+          "getCircuitId()",
+          "getChallengeInputIndex()",
+          "getUserIdInputIndex()",
+          "verify(uint256[2],uint256[2][2],uint256[2],uint256[9],(uint256,uint256,uint256,string))"
+        ],
+        "linkReferences": [],
+        "errors": [],
+        "layout": {
+          "storage": [
+            {
+              "label": "_initialized",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_uint8",
+              "contract": "Initializable",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+              "retypedFrom": "bool"
+            },
+            {
+              "label": "_initializing",
+              "offset": 1,
+              "slot": "0",
+              "type": "t_bool",
+              "contract": "Initializable",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+            },
+            {
+              "label": "__gap",
+              "offset": 0,
+              "slot": "1",
+              "type": "t_array(t_uint256)50_storage",
+              "contract": "ContextUpgradeable",
+              "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+            },
+            {
+              "label": "_owner",
+              "offset": 0,
+              "slot": "51",
+              "type": "t_address",
+              "contract": "OwnableUpgradeable",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+            },
+            {
+              "label": "__gap",
+              "offset": 0,
+              "slot": "52",
+              "type": "t_array(t_uint256)49_storage",
+              "contract": "OwnableUpgradeable",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+            },
+            {
+              "label": "verifier",
+              "offset": 0,
+              "slot": "101",
+              "type": "t_contract(IQueryVerifier)652",
+              "contract": "QueryMTPValidator",
+              "src": "contracts/validators/QueryMTPValidator.sol:16"
+            },
+            {
+              "label": "state",
+              "offset": 0,
+              "slot": "102",
+              "type": "t_contract(IState)679",
+              "contract": "QueryMTPValidator",
+              "src": "contracts/validators/QueryMTPValidator.sol:17"
+            },
+            {
+              "label": "revocationStateExpirationTime",
+              "offset": 0,
+              "slot": "103",
+              "type": "t_uint256",
+              "contract": "QueryMTPValidator",
+              "src": "contracts/validators/QueryMTPValidator.sol:19"
+            }
+          ],
+          "types": {
+            "t_address": {
+              "label": "address",
+              "numberOfBytes": "20"
+            },
+            "t_array(t_uint256)49_storage": {
+              "label": "uint256[49]",
+              "numberOfBytes": "1568"
+            },
+            "t_array(t_uint256)50_storage": {
+              "label": "uint256[50]",
+              "numberOfBytes": "1600"
+            },
+            "t_bool": {
+              "label": "bool",
+              "numberOfBytes": "1"
+            },
+            "t_contract(IQueryVerifier)652": {
+              "label": "contract IQueryVerifier",
+              "numberOfBytes": "20"
+            },
+            "t_contract(IState)679": {
+              "label": "contract IState",
+              "numberOfBytes": "20"
+            },
+            "t_uint256": {
+              "label": "uint256",
+              "numberOfBytes": "32"
+            },
+            "t_uint8": {
+              "label": "uint8",
+              "numberOfBytes": "1"
+            }
+          },
+          "layoutVersion": "1.1",
+          "flat": true
+        },
+        "solcVersion": "0.8.7"
+      },
+      "QuerySigValidator": {
+        "src": "contracts/validators/QuerySigValidator.sol:9",
+        "version": {
+          "withMetadata": "1f178500595647bca8ef18d8dc51ffe15b73f6e8b1c3596e372357345ece5e9f",
+          "withoutMetadata": "85501499236d2d98115747591f2a710528a533dd1f50df03a7c6eaff6dd7ba77",
+          "linkedWithoutMetadata": "85501499236d2d98115747591f2a710528a533dd1f50df03a7c6eaff6dd7ba77"
+        },
+        "inherit": [
+          "IValidator",
+          "OwnableUpgradeable",
+          "ContextUpgradeable",
+          "Initializable"
+        ],
+        "libraries": [
+          "GenesisUtils"
+        ],
+        "methods": [
+          "initialize(address,address)",
+          "setRevocationStateExpirationTime(uint256)",
+          "getCircuitId()",
+          "getChallengeInputIndex()",
+          "getUserIdInputIndex()",
+          "verify(uint256[2],uint256[2][2],uint256[2],uint256[9],(uint256,uint256,uint256,string))"
+        ],
+        "linkReferences": [],
+        "errors": [],
+        "layout": {
+          "storage": [
+            {
+              "label": "_initialized",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_uint8",
+              "contract": "Initializable",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+              "retypedFrom": "bool"
+            },
+            {
+              "label": "_initializing",
+              "offset": 1,
+              "slot": "0",
+              "type": "t_bool",
+              "contract": "Initializable",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+            },
+            {
+              "label": "__gap",
+              "offset": 0,
+              "slot": "1",
+              "type": "t_array(t_uint256)50_storage",
+              "contract": "ContextUpgradeable",
+              "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+            },
+            {
+              "label": "_owner",
+              "offset": 0,
+              "slot": "51",
+              "type": "t_address",
+              "contract": "OwnableUpgradeable",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+            },
+            {
+              "label": "__gap",
+              "offset": 0,
+              "slot": "52",
+              "type": "t_array(t_uint256)49_storage",
+              "contract": "OwnableUpgradeable",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+            },
+            {
+              "label": "verifier",
+              "offset": 0,
+              "slot": "101",
+              "type": "t_contract(IQueryVerifier)652",
+              "contract": "QuerySigValidator",
+              "src": "contracts/validators/QuerySigValidator.sol:13"
+            },
+            {
+              "label": "state",
+              "offset": 0,
+              "slot": "102",
+              "type": "t_contract(IState)679",
+              "contract": "QuerySigValidator",
+              "src": "contracts/validators/QuerySigValidator.sol:14"
+            },
+            {
+              "label": "revocationStateExpirationTime",
+              "offset": 0,
+              "slot": "103",
+              "type": "t_uint256",
+              "contract": "QuerySigValidator",
+              "src": "contracts/validators/QuerySigValidator.sol:15"
+            }
+          ],
+          "types": {
+            "t_address": {
+              "label": "address",
+              "numberOfBytes": "20"
+            },
+            "t_array(t_uint256)49_storage": {
+              "label": "uint256[49]",
+              "numberOfBytes": "1568"
+            },
+            "t_array(t_uint256)50_storage": {
+              "label": "uint256[50]",
+              "numberOfBytes": "1600"
+            },
+            "t_bool": {
+              "label": "bool",
+              "numberOfBytes": "1"
+            },
+            "t_contract(IQueryVerifier)652": {
+              "label": "contract IQueryVerifier",
+              "numberOfBytes": "20"
+            },
+            "t_contract(IState)679": {
+              "label": "contract IState",
+              "numberOfBytes": "20"
+            },
+            "t_uint256": {
+              "label": "uint256",
+              "numberOfBytes": "32"
+            },
+            "t_uint8": {
+              "label": "uint8",
+              "numberOfBytes": "1"
+            }
+          },
+          "layoutVersion": "1.1",
+          "flat": true
+        },
+        "solcVersion": "0.8.7"
+      },
+      "Pairing": {
+        "src": "contracts/verifiers/QuerySigVerifier.sol:4",
+        "version": {
+          "withMetadata": "22e01e787acead0376f8af67da0b6baafa0f483086949f553c933e2034f1c4f5",
+          "withoutMetadata": "a64c6cf9c6ba9368f5132c93a0196b3204a7963dbb4dd05dfddb4ab23126b8db",
+          "linkedWithoutMetadata": "a64c6cf9c6ba9368f5132c93a0196b3204a7963dbb4dd05dfddb4ab23126b8db"
+        },
+        "inherit": [],
+        "libraries": [],
+        "methods": [],
+        "linkReferences": [],
+        "errors": [],
+        "layout": {
+          "storage": [],
+          "types": {},
+          "layoutVersion": "1.1",
+          "flat": false
+        },
+        "solcVersion": "0.8.7"
+      },
+      "QueryMTPVerifier": {
+        "src": "contracts/verifiers/QueryMTPVerifier.sol:153",
+        "version": {
+          "withMetadata": "f84061ff92ae96770ab6ff50a059bcf537271bbaf3d3c0645384764495777795",
+          "withoutMetadata": "62c3ad6fbb0b8a198b3255ba7ca62337ed491707648ea74d401c6cc27e596c74",
+          "linkedWithoutMetadata": "62c3ad6fbb0b8a198b3255ba7ca62337ed491707648ea74d401c6cc27e596c74"
+        },
+        "inherit": [],
+        "libraries": [
+          "Pairing"
+        ],
+        "methods": [
+          "verifyProof(uint256[2],uint256[2][2],uint256[2],uint256[9])"
+        ],
+        "linkReferences": [],
+        "errors": [],
+        "layout": {
+          "storage": [],
+          "types": {},
+          "layoutVersion": "1.1",
+          "flat": false
+        },
+        "solcVersion": "0.8.7"
+      },
+      "QuerySigVerifier": {
+        "src": "contracts/verifiers/QuerySigVerifier.sol:153",
+        "version": {
+          "withMetadata": "a2b2a224b6790136b5438175c0f6bb523401887820929c8b2c58ae6258b087ca",
+          "withoutMetadata": "c6a57c56e5be115ea8a75c4f2dbdf6ee3c7adbd356e8278cffbc589da32059b2",
+          "linkedWithoutMetadata": "c6a57c56e5be115ea8a75c4f2dbdf6ee3c7adbd356e8278cffbc589da32059b2"
+        },
+        "inherit": [],
+        "libraries": [
+          "Pairing"
+        ],
+        "methods": [
+          "verifyProof(uint256[2],uint256[2][2],uint256[2],uint256[9])"
+        ],
+        "linkReferences": [],
+        "errors": [],
+        "layout": {
+          "storage": [],
+          "types": {},
+          "layoutVersion": "1.1",
+          "flat": false
+        },
+        "solcVersion": "0.8.7"
+      },
+      "console": {
+        "src": "hardhat/console.sol:4",
+        "version": {
+          "withMetadata": "0190ae891bd9f5c3275a92402ecb128142abc6c1104d3cb5fa11bf8332a12fce",
+          "withoutMetadata": "a64c6cf9c6ba9368f5132c93a0196b3204a7963dbb4dd05dfddb4ab23126b8db",
+          "linkedWithoutMetadata": "a64c6cf9c6ba9368f5132c93a0196b3204a7963dbb4dd05dfddb4ab23126b8db"
+        },
+        "inherit": [],
+        "libraries": [],
+        "methods": [],
+        "linkReferences": [],
+        "errors": [],
+        "layout": {
+          "storage": [],
+          "types": {},
+          "layoutVersion": "1.1",
+          "flat": false
+        },
+        "solcVersion": "0.8.7"
+      },
+      "BytesLib": {
+        "src": "solidity-bytes-utils/contracts/BytesLib.sol:12",
+        "version": {
+          "withMetadata": "dbb33efb41e6fbc1902e4b2705a76279d37e2140dd01cd7d720d2865795fe792",
+          "withoutMetadata": "a64c6cf9c6ba9368f5132c93a0196b3204a7963dbb4dd05dfddb4ab23126b8db",
+          "linkedWithoutMetadata": "a64c6cf9c6ba9368f5132c93a0196b3204a7963dbb4dd05dfddb4ab23126b8db"
+        },
+        "inherit": [],
+        "libraries": [],
+        "methods": [],
+        "linkReferences": [],
+        "errors": [],
+        "layout": {
+          "storage": [],
+          "types": {},
+          "layoutVersion": "1.1",
+          "flat": false
+        },
+        "solcVersion": "0.8.7"
+      }
+    },
+    {
+      "IValidator": {
+        "src": "contracts/interfaces/IValidator.sol:4",
+        "inherit": [],
+        "libraries": [],
+        "methods": [
+          "verify(uint256[2],uint256[2][2],uint256[2],uint256[9],(uint256,uint256,uint256,string))",
+          "getCircuitId()",
+          "getChallengeInputIndex()",
+          "getUserIdInputIndex()"
+        ],
+        "linkReferences": [],
+        "errors": [],
+        "layout": {
+          "storage": [],
+          "types": {},
+          "layoutVersion": "1.1",
+          "flat": false
+        },
+        "solcVersion": "0.8.7"
+      },
+      "TestValidator": {
+        "src": "contracts/test/TestValidator.sol:6",
+        "version": {
+          "withMetadata": "a5bed6bc44e6f57dc14fe90e05f64c298a4f881c175a1604a8c297f3a206114d",
+          "withoutMetadata": "f2eeb40b8a061e6c961ffca91e02af8dd8c689301377421c29e965193feac65b",
+          "linkedWithoutMetadata": "f2eeb40b8a061e6c961ffca91e02af8dd8c689301377421c29e965193feac65b"
+        },
+        "inherit": [],
+        "libraries": [],
+        "methods": [
+          "(address)",
+          "verify(uint256[2],uint256[2][2],uint256[2],uint256[9])"
+        ],
+        "linkReferences": [],
+        "errors": [
+          {
+            "kind": "constructor",
+            "contract": "TestValidator",
+            "src": "contracts/test/TestValidator.sol:9"
+          }
+        ],
+        "layout": {
+          "storage": [
+            {
+              "label": "owner",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_address",
+              "contract": "TestValidator",
+              "src": "contracts/test/TestValidator.sol:7"
+            },
+            {
+              "label": "validator",
+              "offset": 0,
+              "slot": "1",
+              "type": "t_contract(IValidator)52",
+              "contract": "TestValidator",
+              "src": "contracts/test/TestValidator.sol:8"
+            }
+          ],
+          "types": {
+            "t_address": {
+              "label": "address",
+              "numberOfBytes": "20"
+            },
+            "t_contract(IValidator)52": {
+              "label": "contract IValidator",
+              "numberOfBytes": "20"
+            }
+          },
+          "layoutVersion": "1.1",
+          "flat": true
+        },
+        "solcVersion": "0.8.7"
+      }
+    },
+    {
       "OwnableUpgradeable": {
         "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:21",
         "inherit": [

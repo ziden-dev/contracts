@@ -150,7 +150,7 @@ library Pairing {
         return pairing(p1, p2);
     }
 }
-contract QueryVerifier {
+contract QueryMTPVerifier {
     using Pairing for *;
     struct VerifyingKey {
         Pairing.G1Point alfa1;

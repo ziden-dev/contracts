@@ -6,13 +6,13 @@ const { expect } = require("chai");
 const path = require("path");
 const snarkjs = require("snarkjs");
 
-describe("Test Validator contract", async () => {
+describe("Test MTP Validator contract", async () => {
   let zidenjs,
     deployer,
     state,
     validator,
     stateVerifier,
-    queryVerifier,
+    queryMTPVerifier,
     testContract,
     eddsa,
     F,
@@ -38,9 +38,11 @@ describe("Test Validator contract", async () => {
     stateVerifier = await StateVerifier.connect(deployer).deploy();
     await stateVerifier.deployed();
 
-    const QueryVerifier = await hre.ethers.getContractFactory("QueryVerifier");
-    queryVerifier = await QueryVerifier.deploy();
-    await queryVerifier.deployed();
+    const QueryMTPVerifier = await hre.ethers.getContractFactory(
+      "QueryMTPVerifier"
+    );
+    queryMTPVerifier = await QueryMTPVerifier.deploy();
+    await queryMTPVerifier.deployed();
 
     const State = await hre.ethers.getContractFactory("State");
     state = await State.connect(deployer).deploy();
@@ -54,7 +56,7 @@ describe("Test Validator contract", async () => {
 
     await validator
       .connect(deployer)
-      .initialize(queryVerifier.address, state.address);
+      .initialize(queryMTPVerifier.address, state.address);
 
     const TestValidator = await hre.ethers.getContractFactory("TestValidator");
     testContract = await TestValidator.deploy(validator.address);
@@ -224,9 +226,14 @@ describe("Test Validator contract", async () => {
     console.log(public[2]);
   });
 
-  let values, challenge, hashFunction;
-  it("Generate inputs for query", async () => {
-    values = [BigInt(19941031)];
+  let values, challenge, hashFunction, queryInput;
+  it("Generate inputs for query for NOT-IN operator", async () => {
+    values = [
+      BigInt(19931031),
+      BigInt(19951031),
+      BigInt(19961031),
+      BigInt(19971031),
+    ];
     challenge = BigInt("1390849295786071768276380950238675083608645509734");
     hashFunction = await zidenjs.global.buildFMTHashFunction(hash0, F);
 
@@ -240,30 +247,32 @@ describe("Test Validator contract", async () => {
         issuerTree
       );
 
-    let queryInput =
-      await zidenjs.witness.queryMTP.holderGenerateQueryMTPWitness(
-        issuerClaim,
-        eddsa,
-        holder1Pk,
-        holder1AuthClaim,
-        challenge,
-        holder1Tree,
-        kycQueryInput,
-        kycQueryNonRevInput,
-        3,
-        1,
-        values,
-        10,
-        0,
-        100,
-        hashFunction,
-        F
-      );
+    queryInput = await zidenjs.witness.queryMTP.holderGenerateQueryMTPWitness(
+      issuerClaim,
+      eddsa,
+      holder1Pk,
+      holder1AuthClaim,
+      challenge,
+      holder1Tree,
+      kycQueryInput,
+      kycQueryNonRevInput,
+      3,
+      5,
+      values,
+      10,
+      0,
+      100,
+      hashFunction,
+      F
+    );
     console.log(queryInput);
+  });
+
+  it("Test validator verify function", async () => {
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(
       queryInput,
-      path.resolve("build/query/credentialAtomicQueryMTP.wasm"),
-      path.resolve("build/query/query_final.zkey")
+      path.resolve("build/queryMTP/credentialAtomicQueryMTP.wasm"),
+      path.resolve("build/queryMTP/queryMTP_final.zkey")
     );
     const callData = (
       await snarkjs.groth16.exportSolidityCallData(proof, publicSignals)
@@ -283,7 +292,8 @@ describe("Test Validator contract", async () => {
     c = callData.slice(6, 8).map((e) => BigInt(e));
     public = callData.slice(8, callData.length).map((e) => BigInt(e));
     // console.log(await validator.verify(a, b, c, public));
-    const res = await testContract.verify(a, b, c, public);
-    console.log(res);
+    await testContract.verify(a, b, c, public);
+
+    expect(await testContract.owner()).to.be.equal(deployer.address);
   });
 });

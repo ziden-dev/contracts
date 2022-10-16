@@ -13,17 +13,27 @@ async function main() {
   ).deploy();
   await stateTransitionVerifier.deployed();
 
-  const QueryVerifier = await hre.ethers.getContractFactory("QueryVerifier");
-  const queryVerifier = await QueryVerifier.connect(deployer).deploy();
-  await queryVerifier.deployed();
+  const QueryMTPVerifier = await hre.ethers.getContractFactory(
+    "QueryMTPVerifier"
+  );
+  const queryMTPVerifier = await QueryMTPVerifier.connect(deployer).deploy();
+  await queryMTPVerifier.deployed();
+
+  const QuerySigVerifier = await hre.ethers.getContractFactory(
+    "QuerySigVerifier"
+  );
+  const querySigVerifier = await QuerySigVerifier.deploy();
+  await querySigVerifier.deployed();
 
   console.log(
     "========================== Verifiers deployed =========================="
   );
   console.log("StateTransitionVerifier at : ", stateTransitionVerifier.address);
-  console.log("QueryVerifier at : ", queryVerifier.address);
+  console.log("QueryMTPVerifier at : ", queryMTPVerifier.address);
+  console.log("QuerySigVerifier at : ", querySigVerifier.address);
 
   // ========================== Deploy state contract ==========================
+
   const State = await hre.ethers.getContractFactory("State");
   const state = await State.connect(deployer).deploy();
   await state.deployed();
@@ -36,21 +46,48 @@ async function main() {
   await state.connect(deployer).initialize(stateTransitionVerifier.address);
   console.log("State's owner : ", await state.owner());
   console.log("State verifier at : ", await state.verifier());
-  // ========================== Deploy Validator ==========================
-  const Validator = await hre.ethers.getContractFactory("Validator");
-  const validator = await Validator.deploy();
-  await validator.deployed();
+
+  // ========================== Deploy QueryMTPValidator ==========================
+
+  const QueryMTPValidator = await hre.ethers.getContractFactory(
+    "QueryMTPValidator"
+  );
+  const queryMTPvalidator = await QueryMTPValidator.deploy();
+  await queryMTPvalidator.deployed();
 
   console.log(
-    "========================== Validator deployed =========================="
+    "========================== QueryMTPValidator deployed =========================="
   );
-  console.log("Validator at : ", validator.address);
-  // console.log("Validator's owner : ", validator.owner());
-  await validator
+  console.log("QueryMTPValidator at : ", queryMTPvalidator.address);
+
+  await queryMTPvalidator
     .connect(deployer)
-    .initialize(queryVerifier.address, state.address);
-  console.log("Validator's verifier : ", await validator.verifier());
-  console.log("Validator's state : ", await validator.state());
+    .initialize(queryMTPVerifier.address, state.address);
+  console.log(
+    "QueryMTPValidator's verifier : ",
+    await queryMTPvalidator.verifier()
+  );
+  console.log("QueryMTPValidator's state : ", await queryMTPvalidator.state());
+
+  // ========================== Deploy QuerySigValidator ==========================
+
+  const QuerySigValidator = await hre.ethers.getContractFactory(
+    "QuerySigValidator"
+  );
+  const querySigValidator = await QuerySigValidator.deploy();
+  await querySigValidator.deployed();
+  console.log(
+    "========================== QuerySigValidator deployed =========================="
+  );
+
+  await querySigValidator
+    .connect(deployer)
+    .initialize(querySigVerifier.address, state.address);
+  console.log(
+    "QuerySigValidator's verifier : ",
+    await querySigValidator.verifier()
+  );
+  console.log("QuerySigValidator's state : ", await querySigValidator.state());
 }
 
 main().catch((err) => {
