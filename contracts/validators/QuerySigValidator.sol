@@ -6,6 +6,8 @@ import "../lib/GenesisUtil.sol";
 import "../interfaces/IValidator.sol";
 import "../interfaces/IState.sol";
 import "../interfaces/IQueryVerifier.sol";
+import "hardhat/console.sol";
+
 contract QuerySigValidator is OwnableUpgradeable, IValidator{
   string constant CIRCUIT_ID = "credentialAtomicQuerySig";
   uint256 constant CHALLENGE_INDEX = 3;
@@ -47,14 +49,14 @@ contract QuerySigValidator is OwnableUpgradeable, IValidator{
     Query memory query
    ) external view override returns (bool r){
     require(verifier.verifyProof(a,b,c,inputs), "Atomic query signature proof not valid");
-    require(inputs[6] == query.deterministicValue, "Wrong deterministic value has been used for proof generation");
-    require(inputs[7] == query.compactInput, "Wrong compact input value has been used for proof generation");
+    require(inputs[6] == query.compactInput, "Wrong compact input value has been used for proof generation");
+    require(inputs[7] == query.deterministicValue, "Wrong deterministic value has been used for proof generation");
     require(inputs[8] == query.mask, "Wrong mask has been used for proof generation");
 
     //verify user state
+    uint256 issuerAuthState = inputs[0];
     uint256 userId = inputs[USER_ID_INDEX];
     uint256 userState = inputs[2];
-    uint256 issuerAuthState = inputs[0];
     uint256 issuerId = inputs[4];
     uint256 issuerClaimNonRevState = inputs[5];
 

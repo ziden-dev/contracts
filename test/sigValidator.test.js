@@ -13,6 +13,7 @@ describe("Test Sig Validator contract", async () => {
     stateVerifier,
     querySigVerifier,
     eddsa,
+    tester,
     F,
     hasher,
     hash0,
@@ -57,6 +58,11 @@ describe("Test Sig Validator contract", async () => {
     await sigValidator
       .connect(deployer)
       .initialize(querySigVerifier.address, state.address);
+
+    const TestValidator = await hre.ethers.getContractFactory("TestValidator");
+    tester = await TestValidator.deploy(deployer.address, sigValidator.address);
+
+    await tester.deployed();
   });
 
   let holder1Pk, holder2Pk, issuerPk;
@@ -221,7 +227,7 @@ describe("Test Sig Validator contract", async () => {
 
   let values, challenge, hashFunction, queryInput;
   it("Generate inputs for query with EQUAL operator", async () => {
-    values = [BigInt(19941031)];
+    values = [BigInt(19931031)];
     challenge = BigInt("1390849295786071768276380950238675083608645509734");
     hashFunction = await zidenjs.global.buildFMTHashFunction(hash0, F);
 
@@ -250,7 +256,7 @@ describe("Test Sig Validator contract", async () => {
       kycQuerySigInput,
       kycQuerySigNonRevInput,
       3,
-      1,
+      3,
       values,
       10,
       0,
@@ -267,7 +273,6 @@ describe("Test Sig Validator contract", async () => {
       path.resolve("build/querySig/credentialAtomicQuerySig.wasm"),
       path.resolve("build/querySig/querySig_final.zkey")
     );
-    console.log(proof);
     const callData = (
       await snarkjs.groth16.exportSolidityCallData(proof, publicSignals)
     )
@@ -287,5 +292,7 @@ describe("Test Sig Validator contract", async () => {
     public = callData.slice(8, callData.length).map((e) => BigInt(e));
 
     console.log(public);
+
+    await tester.connect(deployer).verifySig(a, b, c, public);
   });
 });

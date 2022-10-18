@@ -50,8 +50,10 @@ describe("Test MTP Validator contract", async () => {
 
     await state.connect(deployer).initialize(stateVerifier.address);
 
-    const Validator = await hre.ethers.getContractFactory("Validator");
-    validator = await Validator.deploy();
+    const MTPValidator = await hre.ethers.getContractFactory(
+      "QueryMTPValidator"
+    );
+    validator = await MTPValidator.deploy();
     await validator.deployed();
 
     await validator
@@ -59,7 +61,10 @@ describe("Test MTP Validator contract", async () => {
       .initialize(queryMTPVerifier.address, state.address);
 
     const TestValidator = await hre.ethers.getContractFactory("TestValidator");
-    testContract = await TestValidator.deploy(validator.address);
+    testContract = await TestValidator.deploy(
+      validator.address,
+      validator.address
+    );
     await testContract.deployed();
   });
 
@@ -221,9 +226,6 @@ describe("Test MTP Validator contract", async () => {
       b,
       c
     );
-
-    console.log(public[1]);
-    console.log(public[2]);
   });
 
   let values, challenge, hashFunction, queryInput;
@@ -292,7 +294,7 @@ describe("Test MTP Validator contract", async () => {
     c = callData.slice(6, 8).map((e) => BigInt(e));
     public = callData.slice(8, callData.length).map((e) => BigInt(e));
     // console.log(await validator.verify(a, b, c, public));
-    await testContract.verify(a, b, c, public);
+    await testContract.verifyMTP(a, b, c, public);
 
     expect(await testContract.owner()).to.be.equal(deployer.address);
   });

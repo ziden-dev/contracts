@@ -27,8 +27,8 @@ contract TestValidator{
 
   function verifySig(uint[2] memory a, uint[2][2] memory b, uint[2] memory c,uint[9] memory pubSigs) public returns (bool){
     IValidator.Query memory query;
-    query.deterministicValue = pubSigs[6];
-    query.compactInput = pubSigs[7];
+    query.compactInput = pubSigs[6];
+    query.deterministicValue = pubSigs[7];
     query.mask = pubSigs[8];
     query.circuitId = "Query";
     if(sigValidator.verify(a, b, c, pubSigs, query)){

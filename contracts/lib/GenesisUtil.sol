@@ -2,6 +2,7 @@
 pragma solidity 0.8.7;
 
 import "solidity-bytes-utils/contracts/BytesLib.sol";
+import "hardhat/console.sol";
 
 library GenesisUtils {
     /**
@@ -119,15 +120,19 @@ library GenesisUtils {
 
     function getCutState(uint256 idState) internal pure returns (uint256) {
         bytes memory idStateBytes = GenesisUtils.int256ToBytes(idState);
-
         bytes memory cutState = BytesLib.slice(idStateBytes, 0, 29);
+        bytes memory typDefault = hex"000000";
+        cutState = BytesLib.concat(typDefault,cutState);
+        require(cutState.length == 32, "Invalid cutState length");
         return GenesisUtils.toUint256(cutState);
     }
 
     function getCutId(uint256 id) internal pure returns (uint256) {
         bytes memory idBytes = GenesisUtils.int256ToBytes(id);
-
         bytes memory cutId = BytesLib.slice(idBytes, 1, 29);
+        bytes memory typDefault = hex"000000";
+        cutId = BytesLib.concat(typDefault,cutId);
+        require(cutId.length == 32, "Invalid cutId length");
         return GenesisUtils.toUint256(cutId);
     }
 

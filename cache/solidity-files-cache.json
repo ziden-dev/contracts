@@ -229,8 +229,8 @@
       ]
     },
     "/home/tanpx/Desktop/ziden-dev/contracts/contracts/lib/GenesisUtil.sol": {
-      "lastModificationDate": 1665730521753,
-      "contentHash": "d906023db114844a69ba2164ef35c2af",
+      "lastModificationDate": 1666081001387,
+      "contentHash": "98ca99e62db4802f507913cc9d9694fe",
       "sourceName": "contracts/lib/GenesisUtil.sol",
       "solcConfig": {
         "version": "0.8.7",
@@ -257,7 +257,8 @@
         }
       },
       "imports": [
-        "solidity-bytes-utils/contracts/BytesLib.sol"
+        "solidity-bytes-utils/contracts/BytesLib.sol",
+        "hardhat/console.sol"
       ],
       "versionPragmas": [
         "0.8.7"
@@ -484,8 +485,8 @@
       ]
     },
     "/home/tanpx/Desktop/ziden-dev/contracts/contracts/test/TestValidator.sol": {
-      "lastModificationDate": 1665884125285,
-      "contentHash": "0ca718b0b1c0441cf8d7797534845194",
+      "lastModificationDate": 1666076080792,
+      "contentHash": "b89a269bcd9593532fae2e3b6458e32a",
       "sourceName": "contracts/test/TestValidator.sol",
       "solcConfig": {
         "version": "0.8.7",
@@ -522,8 +523,8 @@
       ]
     },
     "/home/tanpx/Desktop/ziden-dev/contracts/contracts/validators/QuerySigValidator.sol": {
-      "lastModificationDate": 1665740063663,
-      "contentHash": "6ce9d8d2bbc107fbc42f4f30e818a869",
+      "lastModificationDate": 1666080042703,
+      "contentHash": "3e766533712101a91f18dbf17c52ad3c",
       "sourceName": "contracts/validators/QuerySigValidator.sol",
       "solcConfig": {
         "version": "0.8.7",
@@ -554,7 +555,8 @@
         "../lib/GenesisUtil.sol",
         "../interfaces/IValidator.sol",
         "../interfaces/IState.sol",
-        "../interfaces/IQueryVerifier.sol"
+        "../interfaces/IQueryVerifier.sol",
+        "hardhat/console.sol"
       ],
       "versionPragmas": [
         "0.8.7"
@@ -564,7 +566,7 @@
       ]
     },
     "/home/tanpx/Desktop/ziden-dev/contracts/contracts/validators/QueryMTPValidator.sol": {
-      "lastModificationDate": 1665737291187,
+      "lastModificationDate": 1666080509510,
       "contentHash": "0163dfa62dc231226e09095fdef4b97c",
       "sourceName": "contracts/validators/QueryMTPValidator.sol",
       "solcConfig": {
