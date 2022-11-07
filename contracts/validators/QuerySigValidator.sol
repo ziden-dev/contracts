@@ -6,7 +6,6 @@ import "../lib/GenesisUtil.sol";
 import "../interfaces/IValidator.sol";
 import "../interfaces/IState.sol";
 import "../interfaces/IQueryVerifier.sol";
-import "hardhat/console.sol";
 
 contract QuerySigValidator is OwnableUpgradeable, IValidator{
   string constant CIRCUIT_ID = "credentialAtomicQuerySig";

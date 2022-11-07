@@ -135,7 +135,6 @@ describe("Full test for MTP and Sig validator", async () => {
       holder1RevsDb,
       holder1RootsDb,
       zidenjs.claim.id.IDType.Default,
-      8,
       0
     );
 
@@ -149,7 +148,7 @@ describe("Full test for MTP and Sig validator", async () => {
       holder2RevsDb,
       holder2RootsDb,
       zidenjs.claim.id.IDType.Default,
-      8,
+
       0
     );
 
@@ -163,7 +162,6 @@ describe("Full test for MTP and Sig validator", async () => {
       issuerRevsDb,
       issuerRootsDb,
       zidenjs.claim.id.IDType.Default,
-      8,
       0
     );
 

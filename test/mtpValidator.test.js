@@ -123,7 +123,8 @@ describe("Test MTP Validator contract", async () => {
       holder1RevsDb,
       holder1RootsDb,
       zidenjs.claim.id.IDType.Default,
-      8
+      32,
+      0
     );
 
     holder2Tree = await zidenjs.trees.Trees.generateID(
@@ -136,7 +137,8 @@ describe("Test MTP Validator contract", async () => {
       holder2RevsDb,
       holder2RootsDb,
       zidenjs.claim.id.IDType.Default,
-      8
+      32,
+      0
     );
 
     issuerTree = await zidenjs.trees.Trees.generateID(
@@ -148,7 +150,9 @@ describe("Test MTP Validator contract", async () => {
       issuerClaimsDb,
       issuerRevsDb,
       issuerRootsDb,
-      zidenjs.claim.id.IDType.Default
+      zidenjs.claim.id.IDType.Default,
+      32,
+      0
     );
 
     holder1Id = zidenjs.utils.bitsToNum(holder1Tree.userID);
