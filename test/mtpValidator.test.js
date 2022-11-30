@@ -1,10 +1,9 @@
 const hre = require("hardhat");
 const crypto = require("crypto");
-const { execSync } = require("child_process");
-const fs = require("fs");
 const { expect } = require("chai");
 const path = require("path");
 const snarkjs = require("snarkjs");
+const { ethers } = require("hardhat");
 
 describe("Test MTP Validator contract", async () => {
   let zidenjs,
@@ -13,21 +12,11 @@ describe("Test MTP Validator contract", async () => {
     validator,
     stateVerifier,
     queryMTPVerifier,
-    testContract,
-    eddsa,
-    F,
-    hasher,
-    hash0,
-    hash1;
+    testContract;
   it("Set up global params", async () => {
     zidenjs = await import("zidenjs");
     deployer = await hre.ethers.getSigner();
-    eddsa = await zidenjs.global.buildSigner();
-    F = await zidenjs.global.buildSnarkField();
-    hasher = await zidenjs.global.buildHasher();
-    let hs = await zidenjs.global.buildHash0Hash1(hasher, F);
-    hash0 = hs.hash0;
-    hash1 = hs.hash1;
+    await zidenjs.global.setupParams();
     console.log("Deployer's address : ", deployer.address);
   });
 
@@ -80,75 +69,55 @@ describe("Test MTP Validator contract", async () => {
     issuerPk = crypto.randomBytes(32);
 
     holder1AuthClaim = await zidenjs.claim.authClaim.newAuthClaimFromPrivateKey(
-      eddsa,
-      F,
       holder1Pk
     );
     holder2AuthClaim = await zidenjs.claim.authClaim.newAuthClaimFromPrivateKey(
-      eddsa,
-      F,
       holder2Pk
     );
     issuerAuthClaim = await zidenjs.claim.authClaim.newAuthClaimFromPrivateKey(
-      eddsa,
-      F,
       issuerPk
     );
 
-    holder1ClaimsDb = new zidenjs.db.SMTLevelDb(
-      "trees/test_db/holder1Claims",
-      F
-    );
-    holder1RevsDb = new zidenjs.db.SMTLevelDb("trees/test_db/holder1Revs", F);
-    holder1RootsDb = new zidenjs.db.SMTLevelDb("trees/test_db/holder1Roots", F);
+    holder1ClaimsDb = new zidenjs.db.SMTLevelDb("trees/test_db/holder1Claims");
+    holder1RevsDb = new zidenjs.db.SMTLevelDb("trees/test_db/holder1Revs");
+    holder1RootsDb = new zidenjs.db.SMTLevelDb("trees/test_db/holder1Roots");
 
-    holder2ClaimsDb = new zidenjs.db.SMTLevelDb(
-      "trees/test_db/holder2Claims",
-      F
-    );
-    holder2RevsDb = new zidenjs.db.SMTLevelDb("trees/test_db/holder2Revs", F);
-    holder2RootsDb = new zidenjs.db.SMTLevelDb("trees/test_db/holder2Roots", F);
+    holder2ClaimsDb = new zidenjs.db.SMTLevelDb("trees/test_db/holder2Claims");
+    holder2RevsDb = new zidenjs.db.SMTLevelDb("trees/test_db/holder2Revs");
+    holder2RootsDb = new zidenjs.db.SMTLevelDb("trees/test_db/holder2Roots");
 
-    issuerClaimsDb = new zidenjs.db.SMTLevelDb("trees/test_db/issuerClaims", F);
-    issuerRevsDb = new zidenjs.db.SMTLevelDb("trees/test_db/issuerRevs", F);
-    issuerRootsDb = new zidenjs.db.SMTLevelDb("trees/test_db/issuerRoots", F);
+    issuerClaimsDb = new zidenjs.db.SMTLevelDb("trees/test_db/issuerClaims");
+    issuerRevsDb = new zidenjs.db.SMTLevelDb("trees/test_db/issuerRevs");
+    issuerRootsDb = new zidenjs.db.SMTLevelDb("trees/test_db/issuerRoots");
 
     holder1Tree = await zidenjs.trees.Trees.generateID(
-      F,
-      hash0,
-      hash1,
-      hasher,
       [holder1AuthClaim],
       holder1ClaimsDb,
       holder1RevsDb,
       holder1RootsDb,
       zidenjs.claim.id.IDType.Default,
-      8
+      32,
+      zidenjs.trees.SMTType.BinSMT
     );
 
     holder2Tree = await zidenjs.trees.Trees.generateID(
-      F,
-      hash0,
-      hash1,
-      hasher,
       [holder2AuthClaim],
       holder2ClaimsDb,
       holder2RevsDb,
       holder2RootsDb,
       zidenjs.claim.id.IDType.Default,
-      8
+      32,
+      zidenjs.trees.SMTType.BinSMT
     );
 
     issuerTree = await zidenjs.trees.Trees.generateID(
-      F,
-      hash0,
-      hash1,
-      hasher,
       [issuerAuthClaim],
       issuerClaimsDb,
       issuerRevsDb,
       issuerRootsDb,
-      zidenjs.claim.id.IDType.Default
+      zidenjs.claim.id.IDType.Default,
+      32,
+      zidenjs.trees.SMTType.BinSMT
     );
 
     holder1Id = zidenjs.utils.bitsToNum(holder1Tree.userID);
@@ -185,19 +154,17 @@ describe("Test MTP Validator contract", async () => {
 
     const stateTransitionInput =
       await zidenjs.witness.stateTransition.stateTransitionWitness(
-        eddsa,
         issuerPk,
         issuerAuthClaim,
         issuerTree,
         [issuerClaim],
-        [],
-        hasher
+        []
       );
 
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(
       stateTransitionInput,
-      path.resolve("./build/stateTransition/stateTransition.wasm"),
-      path.resolve("./build/stateTransition/state_final.zkey")
+      path.resolve("./build/state transition/stateTransition.wasm"),
+      path.resolve("./build/state transition/stateTransition.zkey")
     );
     const callData = (
       await snarkjs.groth16.exportSolidityCallData(proof, publicSignals)
@@ -217,7 +184,7 @@ describe("Test MTP Validator contract", async () => {
     c = callData.slice(6, 8).map((e) => BigInt(e));
     public = callData.slice(8, callData.length).map((e) => BigInt(e));
 
-    await state.transitState(
+    const tx = await state.transitState(
       public[0],
       public[1],
       public[2],
@@ -226,9 +193,11 @@ describe("Test MTP Validator contract", async () => {
       b,
       c
     );
+
+    await tx.wait();
   });
 
-  let values, challenge, hashFunction, queryInput;
+  let values, challenge, queryInput;
   it("Generate inputs for query for NOT-IN operator", async () => {
     values = [
       BigInt(19931031),
@@ -237,10 +206,9 @@ describe("Test MTP Validator contract", async () => {
       BigInt(19971031),
     ];
     challenge = BigInt("1390849295786071768276380950238675083608645509734");
-    hashFunction = await zidenjs.global.buildFMTHashFunction(hash0, F);
 
     let kycQueryInput = await zidenjs.witness.queryMTP.kycGenerateQueryMTPInput(
-      issuerClaim.hiRaw(issuerTree.hasher),
+      issuerClaim.hiRaw(),
       issuerTree
     );
     let kycQueryNonRevInput =
@@ -251,7 +219,6 @@ describe("Test MTP Validator contract", async () => {
 
     queryInput = await zidenjs.witness.queryMTP.holderGenerateQueryMTPWitness(
       issuerClaim,
-      eddsa,
       holder1Pk,
       holder1AuthClaim,
       challenge,
@@ -264,18 +231,26 @@ describe("Test MTP Validator contract", async () => {
       10,
       0,
       100,
-      hashFunction,
-      F
+      Date.now()
     );
     console.log(queryInput);
   });
 
+  let fromTimestamp, toTimestamp;
+  it("Get block timestamp", async () => {
+    const blockNum = await ethers.provider.getBlockNumber();
+    const block = await ethers.provider.getBlock(blockNum);
+    const timestamp = block.timestamp;
+    fromTimestamp = timestamp + 1000;
+    toTimestamp = timestamp + 100000000;
+  });
   it("Test validator verify function", async () => {
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(
       queryInput,
-      path.resolve("build/queryMTP/credentialAtomicQueryMTP.wasm"),
-      path.resolve("build/queryMTP/queryMTP_final.zkey")
+      path.resolve("./build/queryMTP/credentialAtomicQueryMTP.wasm"),
+      path.resolve("./build/queryMTP/queryMTP_final.zkey")
     );
+
     const callData = (
       await snarkjs.groth16.exportSolidityCallData(proof, publicSignals)
     )
@@ -294,8 +269,21 @@ describe("Test MTP Validator contract", async () => {
     c = callData.slice(6, 8).map((e) => BigInt(e));
     public = callData.slice(8, callData.length).map((e) => BigInt(e));
     // console.log(await validator.verify(a, b, c, public));
-    await testContract.verifyMTP(a, b, c, public);
+    const valid = await testContract.verifyMTP(a, b, c, public);
+    expect(valid).to.be.true;
 
-    expect(await testContract.owner()).to.be.equal(deployer.address);
+    const validInDuration = await testContract.verifyMTPInDuration(
+      a,
+      b,
+      c,
+      public,
+      fromTimestamp,
+      toTimestamp
+    );
+    expect(validInDuration).to.be.true;
+
+    await expect(
+      testContract.verifyMTPInDuration(a, b, c, public, 0, toTimestamp)
+    ).to.be.revertedWith("MTP Validator: fromTimestamp < createAtTimestamp");
   });
 });

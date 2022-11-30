@@ -1,25 +1,42 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.7;
+pragma solidity ^0.8.7;
 
-interface IValidator{
-  struct Query{
-    uint256 deterministicValue;
-    uint256 compactInput;
-    uint256 mask;
-    string circuitId;
-  }
+interface IValidator {
+    struct Query {
+        uint256 deterministicValue;
+        uint256 compactInput;
+        uint256 mask;
+        string circuitId;
+    }
 
-  function verify(
-    uint[2] memory a,
-    uint[2][2] memory b,
-    uint[2] memory c,
-    uint[9] memory inputs,
-    Query memory query
-  ) external view returns (bool r);
+    struct DurationQuery {
+        uint256 deterministicValue;
+        uint256 compactInput;
+        uint256 mask;
+        uint256 fromTimestamp;
+        uint256 toTimestamp;
+        string circuitId;
+    }
 
-  function getCircuitId() external pure returns (string memory id);
+    function verify(
+        uint256[2] memory a,
+        uint256[2][2] memory b,
+        uint256[2] memory c,
+        uint256[9] memory inputs,
+        Query memory query
+    ) external view returns (bool r);
 
-  function getChallengeInputIndex() external pure returns (uint256 index);
+    function verifyInDuration(
+        uint256[2] memory a,
+        uint256[2][2] memory b,
+        uint256[2] memory c,
+        uint256[9] memory inputs,
+        DurationQuery memory query
+    ) external view returns (bool r);
 
-  function getUserIdInputIndex() external pure returns (uint256 index);
+    function getCircuitId() external pure returns (string memory id);
+
+    function getChallengeInputIndex() external pure returns (uint256 index);
+
+    function getUserIdInputIndex() external pure returns (uint256 index);
 }
