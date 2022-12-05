@@ -77,7 +77,7 @@
       ]
     },
     "/home/tanpx/Desktop/ziden-dev/contracts/node_modules/@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol": {
-      "lastModificationDate": 1667793165719,
+      "lastModificationDate": 1668076351052,
       "contentHash": "403ce8273abde646bff81558ddf512ad",
       "sourceName": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
       "solcConfig": {
@@ -116,8 +116,8 @@
       ]
     },
     "/home/tanpx/Desktop/ziden-dev/contracts/node_modules/@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol": {
-      "lastModificationDate": 1667793165683,
-      "contentHash": "462ee617f95a60b567309fdc4fdd4174",
+      "lastModificationDate": 1668076351032,
+      "contentHash": "e9b0b058deea0144d9399002b67229f2",
       "sourceName": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
       "solcConfig": {
         "version": "0.8.7",
@@ -154,7 +154,7 @@
       ]
     },
     "/home/tanpx/Desktop/ziden-dev/contracts/node_modules/@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol": {
-      "lastModificationDate": 1667793164835,
+      "lastModificationDate": 1668076350700,
       "contentHash": "6200b84950eb05b4a92a39fd1d6e0f9b",
       "sourceName": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol",
       "solcConfig": {
@@ -192,8 +192,8 @@
       ]
     },
     "/home/tanpx/Desktop/ziden-dev/contracts/node_modules/@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol": {
-      "lastModificationDate": 1667793164787,
-      "contentHash": "213d37c740919a17898359b4a7a12964",
+      "lastModificationDate": 1668076350676,
+      "contentHash": "228f256dbb21393bc9ad02648e222f74",
       "sourceName": "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol",
       "solcConfig": {
         "version": "0.8.7",
@@ -484,8 +484,8 @@
       ]
     },
     "/home/tanpx/Desktop/ziden-dev/contracts/contracts/test/TestValidator.sol": {
-      "lastModificationDate": 1666076080792,
-      "contentHash": "b89a269bcd9593532fae2e3b6458e32a",
+      "lastModificationDate": 1670227332597,
+      "contentHash": "c31a01cf30716e71ab8253f9e5085b79",
       "sourceName": "contracts/test/TestValidator.sol",
       "solcConfig": {
         "version": "0.8.7",
@@ -522,8 +522,8 @@
       ]
     },
     "/home/tanpx/Desktop/ziden-dev/contracts/contracts/validators/QuerySigValidator.sol": {
-      "lastModificationDate": 1667548882998,
-      "contentHash": "769c1c7de49479cf004eae59a2539ec3",
+      "lastModificationDate": 1670227245381,
+      "contentHash": "35fac90249fe73ab06cac35e1d20ab48",
       "sourceName": "contracts/validators/QuerySigValidator.sol",
       "solcConfig": {
         "version": "0.8.7",
@@ -554,7 +554,8 @@
         "../lib/GenesisUtil.sol",
         "../interfaces/IValidator.sol",
         "../interfaces/IState.sol",
-        "../interfaces/IQueryVerifier.sol"
+        "../interfaces/IQueryVerifier.sol",
+        "hardhat/console.sol"
       ],
       "versionPragmas": [
         "0.8.7"
@@ -564,8 +565,8 @@
       ]
     },
     "/home/tanpx/Desktop/ziden-dev/contracts/contracts/validators/QueryMTPValidator.sol": {
-      "lastModificationDate": 1667548881146,
-      "contentHash": "ce05ef99ca17ea5cc158cc96988ec08d",
+      "lastModificationDate": 1670215526812,
+      "contentHash": "683077119ebccd5ac14ef0373d5ba4ee",
       "sourceName": "contracts/validators/QueryMTPValidator.sol",
       "solcConfig": {
         "version": "0.8.7",
@@ -596,7 +597,8 @@
         "../lib/GenesisUtil.sol",
         "../interfaces/IValidator.sol",
         "../interfaces/IQueryVerifier.sol",
-        "../interfaces/IState.sol"
+        "../interfaces/IState.sol",
+        "solidity-bytes-utils/contracts/BytesLib.sol"
       ],
       "versionPragmas": [
         "0.8.7"
@@ -643,8 +645,8 @@
       ]
     },
     "/home/tanpx/Desktop/ziden-dev/contracts/contracts/verifiers/QuerySigVerifier.sol": {
-      "lastModificationDate": 1665736777292,
-      "contentHash": "3643bf2c2df79acce6b75f19d197bdb6",
+      "lastModificationDate": 1670227113011,
+      "contentHash": "d668472a6e859f17622c36964ef52094",
       "sourceName": "contracts/verifiers/QuerySigVerifier.sol",
       "solcConfig": {
         "version": "0.8.7",

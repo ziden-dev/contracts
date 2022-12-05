@@ -1,26 +1,25 @@
 const hre = require("hardhat");
 const crypto = require("crypto");
-const { execSync } = require("child_process");
 const { expect } = require("chai");
-const snarkjs = require("snarkjs");
 const path = require("path");
+const snarkjs = require("snarkjs");
+const { buildEddsa, buildBabyjub } = require("circomlibjs");
 
-describe("Test Sig Validator contract", async () => {
+describe("Full test for MTP and Sig validator", async () => {
   let zidenjs,
     deployer,
     state,
     sigValidator,
-    stateVerifier,
-    querySigVerifier,
+    mtpValidator,
+    testContract,
     eddsa,
-    tester,
     F,
     hasher,
     hash0,
     hash1;
   it("Set up global params", async () => {
     zidenjs = await import("zidenjs");
-    deployer = await hre.ethers.getSigner();
+    deployer = await ethers.getSigner();
     eddsa = await zidenjs.global.buildSigner();
     F = await zidenjs.global.buildSnarkField();
     hasher = await zidenjs.global.buildHasher();
@@ -30,68 +29,83 @@ describe("Test Sig Validator contract", async () => {
     console.log("Deployer's address : ", deployer.address);
   });
 
-  it("Deploy contract", async () => {
+  it("Deploy contracts", async () => {
     const StateVerifier = await hre.ethers.getContractFactory(
       "StateTransitionVerifier"
     );
-    stateVerifier = await StateVerifier.deploy();
+    const stateVerifier = await StateVerifier.deploy();
     await stateVerifier.deployed();
+    const QueryMTPVerifier = await hre.ethers.getContractFactory(
+      "QueryMTPVerifier"
+    );
+    const queryMTPVerifier = await QueryMTPVerifier.deploy();
+    await queryMTPVerifier.deployed();
 
     const QuerySigVerifier = await hre.ethers.getContractFactory(
       "QuerySigVerifier"
     );
-    querySigVerifier = await QuerySigVerifier.deploy();
+    const querySigVerifier = await QuerySigVerifier.deploy();
     await querySigVerifier.deployed();
 
     const State = await hre.ethers.getContractFactory("State");
-    state = await State.connect(deployer).deploy();
+    state = await State.deploy();
     await state.deployed();
 
     await state.connect(deployer).initialize(stateVerifier.address);
 
-    const SigValidator = await hre.ethers.getContractFactory(
+    const QueryMTPValidator = await hre.ethers.getContractFactory(
+      "QueryMTPValidator"
+    );
+    mtpValidator = await QueryMTPValidator.deploy();
+    await mtpValidator.deployed();
+
+    await mtpValidator
+      .connect(deployer)
+      .initialize(queryMTPVerifier.address, state.address);
+
+    const QuerySigValidator = await hre.ethers.getContractFactory(
       "QuerySigValidator"
     );
-    sigValidator = await SigValidator.deploy();
+    sigValidator = await QuerySigValidator.deploy();
     await sigValidator.deployed();
 
     await sigValidator
       .connect(deployer)
       .initialize(querySigVerifier.address, state.address);
 
-    const TestValidator = await hre.ethers.getContractFactory("TestValidator");
-    tester = await TestValidator.deploy(deployer.address, sigValidator.address);
-
-    await tester.deployed();
+    const TestContract = await hre.ethers.getContractFactory("TestValidator");
+    testContract = await TestContract.deploy(
+      mtpValidator.address,
+      sigValidator.address
+    );
+    await testContract.deployed();
   });
 
-  let holder1Pk, holder2Pk, issuerPk;
+  let holder1Prvkey, holder2Prvkey, issuerPrvkey;
   let holder1AuthClaim, holder2AuthClaim, issuerAuthClaim;
   let holder1ClaimsDb, holder1RevsDb, holder1RootsDb, holder1Tree;
   let holder2ClaimsDb, holder2RevsDb, holder2RootsDb, holder2Tree;
   let issuerClaimsDb, issuerRevsDb, issuerRootsDb, issuerTree;
   let holder1Id, holder2Id, issuerId;
   it("Generate 2 holders and 1 issuer", async () => {
-    holder1Pk = crypto.randomBytes(32);
-    holder2Pk = crypto.randomBytes(32);
-    issuerPk = crypto.randomBytes(32);
-
-    holder1AuthClaim = await zidenjs.claim.authClaim.newAuthClaimFromPrivateKey(
-      eddsa,
-      F,
-      holder1Pk
+    holder1Prvkey = crypto.randomBytes(32);
+    holder2Prvkey = crypto.randomBytes(32);
+    issuerPrvkey = crypto.randomBytes(32);
+    let holder1Pubkey = eddsa.prv2pub(holder1Prvkey);
+    let holder2Pubkey = eddsa.prv2pub(holder2Prvkey);
+    let issuerPubkey = eddsa.prv2pub(issuerPrvkey);
+    holder1AuthClaim = await zidenjs.claim.authClaim.newAuthClaimFromPublicKey(
+      F.toObject(holder1Pubkey[0]),
+      F.toObject(holder1Pubkey[1])
     );
-    holder2AuthClaim = await zidenjs.claim.authClaim.newAuthClaimFromPrivateKey(
-      eddsa,
-      F,
-      holder2Pk
+    holder2AuthClaim = await zidenjs.claim.authClaim.newAuthClaimFromPublicKey(
+      F.toObject(holder2Pubkey[0]),
+      F.toObject(holder2Pubkey[1])
     );
-    issuerAuthClaim = await zidenjs.claim.authClaim.newAuthClaimFromPrivateKey(
-      eddsa,
-      F,
-      issuerPk
+    issuerAuthClaim = await zidenjs.claim.authClaim.newAuthClaimFromPublicKey(
+      F.toObject(issuerPubkey[0]),
+      F.toObject(issuerPubkey[1])
     );
-
     holder1ClaimsDb = new zidenjs.db.SMTLevelDb(
       "trees/test_db/holder1Claims",
       F
@@ -120,7 +134,8 @@ describe("Test Sig Validator contract", async () => {
       holder1RevsDb,
       holder1RootsDb,
       zidenjs.claim.id.IDType.Default,
-      8
+      32,
+      0
     );
 
     holder2Tree = await zidenjs.trees.Trees.generateID(
@@ -133,7 +148,8 @@ describe("Test Sig Validator contract", async () => {
       holder2RevsDb,
       holder2RootsDb,
       zidenjs.claim.id.IDType.Default,
-      8
+      32,
+      0
     );
 
     issuerTree = await zidenjs.trees.Trees.generateID(
@@ -145,7 +161,9 @@ describe("Test Sig Validator contract", async () => {
       issuerClaimsDb,
       issuerRevsDb,
       issuerRootsDb,
-      zidenjs.claim.id.IDType.Default
+      zidenjs.claim.id.IDType.Default,
+      32,
+      0
     );
 
     holder1Id = zidenjs.utils.bitsToNum(holder1Tree.userID);
@@ -183,14 +201,14 @@ describe("Test Sig Validator contract", async () => {
     const stateTransitionInput =
       await zidenjs.witness.stateTransition.stateTransitionWitness(
         eddsa,
-        issuerPk,
+        issuerPrvkey,
         issuerAuthClaim,
         issuerTree,
         [issuerClaim],
         [],
         hasher
       );
-
+    // console.log(stateTransitionInput);
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(
       stateTransitionInput,
       path.resolve("./build/stateTransition/stateTransition.wasm"),
@@ -207,35 +225,99 @@ describe("Test Sig Validator contract", async () => {
     let a,
       b = [],
       c,
-      public;
+      publicInp;
     a = callData.slice(0, 2).map((e) => BigInt(e));
     b[0] = callData.slice(2, 4).map((e) => BigInt(e));
     b[1] = callData.slice(4, 6).map((e) => BigInt(e));
     c = callData.slice(6, 8).map((e) => BigInt(e));
-    public = callData.slice(8, callData.length).map((e) => BigInt(e));
+    publicInp = callData.slice(8, callData.length).map((e) => BigInt(e));
 
     await state.transitState(
-      public[0],
-      public[1],
-      public[2],
-      public[3],
+      publicInp[0],
+      publicInp[1],
+      publicInp[2],
+      publicInp[3],
       a,
       b,
       c
     );
   });
 
-  let values, challenge, hashFunction, queryInput;
-  it("Generate inputs for query with EQUAL operator", async () => {
-    values = [BigInt(19931031)];
+  let values, challenge, hashFunction, queryMTPInput, querySigInput;
+  it("Generate calldata for query MTP with EQUAL operator", async () => {
+    values = [BigInt(19941031)];
     challenge = BigInt("1390849295786071768276380950238675083608645509734");
     hashFunction = await zidenjs.global.buildFMTHashFunction(hash0, F);
 
+    let kycQueryInput = await zidenjs.witness.queryMTP.kycGenerateQueryMTPInput(
+      issuerClaim.hiRaw(issuerTree.hasher),
+      issuerTree
+    );
+
+    let kycNonRevInput =
+      await zidenjs.witness.queryMTP.kycGenerateNonRevQueryMTPInput(
+        issuerClaim.getRevocationNonce(),
+        issuerTree
+      );
+
+    queryMTPInput =
+      await zidenjs.witness.queryMTP.holderGenerateQueryMTPWitness(
+        issuerClaim,
+        eddsa,
+        holder1Prvkey,
+        holder1AuthClaim,
+        challenge,
+        holder1Tree,
+        kycQueryInput,
+        kycNonRevInput,
+        3,
+        1,
+        values,
+        10,
+        0,
+        100,
+        hashFunction,
+        F
+      );
+    console.log(queryMTPInput.compactInput);
+
+    const { proof, publicSignals } = await snarkjs.groth16.fullProve(
+      queryMTPInput,
+      path.resolve("build/queryMTP/credentialAtomicQueryMTP.wasm"),
+      path.resolve("build/queryMTP/queryMTP_final.zkey")
+    );
+    const callData = (
+      await snarkjs.groth16.exportSolidityCallData(proof, publicSignals)
+    )
+      .toString()
+      .split(",")
+      .map((e) => {
+        return e.replaceAll(/([\[\]\s\"])/g, "");
+      });
+    let a,
+      b = [],
+      c,
+      publicInp;
+    a = callData.slice(0, 2).map((e) => BigInt(e));
+    b[0] = callData.slice(2, 4).map((e) => BigInt(e));
+    b[1] = callData.slice(4, 6).map((e) => BigInt(e));
+    c = callData.slice(6, 8).map((e) => BigInt(e));
+    publicInp = callData.slice(8, callData.length).map((e) => BigInt(e));
+
+    // console.log(await testContract.functions.verifyMTP(a, b, c, publicInp));
+    // console.log("Calldata for query MTP : ");
+    // console.log(callData);
+    // console.log(
+    //   "=============================================================================="
+    // );
+  });
+
+  it("Generate calldata for query Sig with EQUAL operator", async () => {
     let kycQuerySigInput =
       await zidenjs.witness.querySig.kycGenerateQuerySigInput(
         eddsa,
         hasher,
-        issuerPk,
+        issuerPrvkey,
         issuerAuthClaim,
         issuerClaim,
         issuerTree
@@ -246,30 +328,27 @@ describe("Test Sig Validator contract", async () => {
         issuerTree
       );
 
-    queryInput = await zidenjs.witness.querySig.holderGenerateQuerySigWitness(
-      issuerClaim,
-      eddsa,
-      holder1Pk,
-      holder1AuthClaim,
-      challenge,
-      holder1Tree,
-      kycQuerySigInput,
-      kycQuerySigNonRevInput,
-      3,
-      3,
-      values,
-      10,
-      0,
-      100,
-      hashFunction,
-      F
-    );
-    console.log(queryInput);
-  });
-
-  it("Test validator verify function", async () => {
+    querySigInput =
+      await zidenjs.witness.querySig.holderGenerateQuerySigWitness(
+        issuerClaim,
+        eddsa,
+        holder1Prvkey,
+        holder1AuthClaim,
+        challenge,
+        holder1Tree,
+        kycQuerySigInput,
+        kycQuerySigNonRevInput,
+        3,
+        1,
+        values,
+        10,
+        0,
+        100,
+        hashFunction,
+        F
+      );
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(
-      queryInput,
+      querySigInput,
       path.resolve("build/querySig/credentialAtomicQuerySig.wasm"),
       path.resolve("build/querySig/querySig_final.zkey")
     );
@@ -284,15 +363,13 @@ describe("Test Sig Validator contract", async () => {
     let a,
       b = [],
       c,
-      public;
+      publicInp;
     a = callData.slice(0, 2).map((e) => BigInt(e));
     b[0] = callData.slice(2, 4).map((e) => BigInt(e));
     b[1] = callData.slice(4, 6).map((e) => BigInt(e));
     c = callData.slice(6, 8).map((e) => BigInt(e));
-    public = callData.slice(8, callData.length).map((e) => BigInt(e));
-
-    console.log(public);
-
-    await tester.connect(deployer).verifySig(a, b, c, public);
+    publicInp = callData.slice(8, callData.length).map((e) => BigInt(e));
+    // console.log(publicInp);
+    // console.log(await testContract.functions.verifySig(a, b, c, publicInp));
   });
 });
