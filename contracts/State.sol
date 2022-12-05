@@ -3,7 +3,7 @@ pragma solidity 0.8.7;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./interfaces/IStateVerifier.sol";
-import "hardhat/console.sol";
+
 
 /**
  * @dev Set and get state for each identity

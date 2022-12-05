@@ -83,6 +83,7 @@ async function main() {
   await querySigValidator
     .connect(deployer)
     .initialize(querySigVerifier.address, state.address);
+  console.log("QuerySigValidator at : ", querySigValidator.address);
   console.log(
     "QuerySigValidator's verifier : ",
     await querySigValidator.verifier()

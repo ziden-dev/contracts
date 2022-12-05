@@ -49,7 +49,17 @@ contract QuerySigValidator is OwnableUpgradeable, IValidator{
     Query memory query
    ) external view override returns (bool r){
     require(verifier.verifyProof(a,b,c,inputs), "Atomic query signature proof not valid");
-    require(inputs[6] == query.compactInput, "Wrong compact input value has been used for proof generation");
+    
+    {
+        bytes memory typDefault = hex"00000000000000000000000000000000";
+        bytes memory compactInputBytes = GenesisUtils.int256ToBytes(inputs[6]);
+        bytes memory cutCompactInputBytes = BytesLib.slice(compactInputBytes,16,16);
+        cutCompactInputBytes = BytesLib.concat(typDefault,cutCompactInputBytes);
+        uint256 cutCompactInp = GenesisUtils.toUint256(cutCompactInputBytes);
+        console.log(cutCompactInp);
+        console.log(query.compactInput);
+        require(cutCompactInp == query.compactInput, "wrong compact input has been used for proof generation");
+    }
     require(inputs[7] == query.deterministicValue, "Wrong deterministic value has been used for proof generation");
     require(inputs[8] == query.mask, "Wrong mask has been used for proof generation");
 

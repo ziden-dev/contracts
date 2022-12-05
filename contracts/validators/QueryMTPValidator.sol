@@ -6,7 +6,7 @@ import "../lib/GenesisUtil.sol";
 import "../interfaces/IValidator.sol";
 import "../interfaces/IQueryVerifier.sol";
 import "../interfaces/IState.sol";
-import "hardhat/console.sol";
+import "solidity-bytes-utils/contracts/BytesLib.sol";
 
 contract QueryMTPValidator is OwnableUpgradeable, IValidator{
   string constant CIRCUIT_ID = "credentialAtomicQuery";
@@ -64,12 +64,18 @@ contract QueryMTPValidator is OwnableUpgradeable, IValidator{
       uint[9] memory inputs,
       Query memory query
     ) external view override returns (bool r){
-
+      //verify compact input
+      {
+        bytes memory typDefault = hex"00000000000000000000000000000000";
+        bytes memory compactInputBytes = GenesisUtils.int256ToBytes(inputs[6]);
+        bytes memory cutCompactInputBytes = BytesLib.slice(compactInputBytes,16,16);
+        cutCompactInputBytes = BytesLib.concat(typDefault,cutCompactInputBytes);
+        uint256 cutCompactInp = GenesisUtils.toUint256(cutCompactInputBytes);
+        require(cutCompactInp == query.compactInput, "wrong compact input has been used for proof generation");
+      }
       // verify query
-      require(inputs[6] == query.deterministicValue, "wrong deterministic value has been used for proof generation");
-      require(inputs[7] == query.compactInput, "wrong compact input has been used for proof generation");
+      require(inputs[7] == query.deterministicValue, "wrong deterministic value has been used for proof generation");
       require(inputs[8] == query.mask, "wrong mask has been used for proof generation");
-
       // verify user state
 
       uint256 userId = inputs[0];
