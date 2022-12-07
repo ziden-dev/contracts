@@ -20,6 +20,7 @@ module.exports = {
       },
     },
   },
+  // defaultNetwork: "testbsc",
   networks: {
     testbsc: {
       chainId: 97,

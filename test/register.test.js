@@ -4,6 +4,7 @@ const path = require("path");
 const snarkjs = require("snarkjs");
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+const fs = require("fs");
 
 async function exportCalldata(proof, publicSignals) {
   const callData = (
@@ -103,6 +104,53 @@ describe("Test Register metrics contract", async () => {
       toTimestamp
     );
     await registerContract.deployed();
+
+    // let addresses = {
+    //   state: state.address,
+    //   stateVerifier: stateVerifier.address,
+    //   queryMTPVerifier: queryMTPVerifier.address,
+    //   validator: validator.address,
+    //   test: testContract.address,
+    //   register: registerContract.address,
+    // };
+
+    // const addresses_json = JSON.stringify(addresses);
+    // fs.writeFileSync("address.json", addresses_json);
+  });
+
+  it.skip("Load Contract", async () => {
+    const addresses_json = fs.readFileSync("address.json");
+    const addresses = JSON.parse(addresses_json);
+
+    const StateVerifier = await hre.ethers.getContractFactory(
+      "StateTransitionVerifier"
+    );
+    stateVerifier = StateVerifier.attach(addresses.stateVerifier);
+
+    const QueryMTPVerifier = await hre.ethers.getContractFactory(
+      "QueryMTPVerifier"
+    );
+    queryMTPVerifier = QueryMTPVerifier.attach(addresses.queryMTPVerifier);
+
+    const State = await hre.ethers.getContractFactory("State");
+    state = State.attach(addresses.state);
+
+    const MTPValidator = await hre.ethers.getContractFactory(
+      "QueryMTPValidator"
+    );
+    validator = MTPValidator.attach(addresses.validator);
+
+    const TestValidator = await hre.ethers.getContractFactory("TestValidator");
+    testContract = TestValidator.attach(addresses.test);
+
+    const RegisterMetrics = await hre.ethers.getContractFactory(
+      "RegisterMetrics"
+    );
+
+    register = RegisterMetrics.attach(addresses.register);
+
+    console.log(validator.address);
+    console.log(register.address);
   });
 
   const holderNum = 10;
@@ -118,7 +166,7 @@ describe("Test Register metrics contract", async () => {
 
   it("Generate " + holderNum + " holders", async () => {
     for (let i = 0; i < holderNum; i++) {
-      holderPks[i] = crypto.randomBytes(32);
+      holderPks[i] = Buffer.alloc(32, i);
 
       holderAuthClaims[i] =
         await zidenjs.claim.authClaim.newAuthClaimFromPrivateKey(holderPks[i]);
@@ -151,7 +199,7 @@ describe("Test Register metrics contract", async () => {
 
   it("Generate " + issuerNum + " issuers", async () => {
     for (let i = 0; i < issuerNum; i++) {
-      issuerPks[i] = crypto.randomBytes(32);
+      issuerPks[i] = Buffer.alloc(32, i + 111);
 
       issuerAuthClaims[i] =
         await zidenjs.claim.authClaim.newAuthClaimFromPrivateKey(issuerPks[i]);
