@@ -2,6 +2,7 @@
 pragma solidity ^0.8.7;
 
 import "../interfaces/IValidator.sol";
+import "../interfaces/IState.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
@@ -9,137 +10,81 @@ contract RegisterMetrics is Ownable {
     using Counters for Counters.Counter;
 
     struct AllowedQuery {
-        uint256 compactInput;
-        uint256 mask;
-        string circuitId;
         uint256 issuerId;
         uint256 factor;
+        uint128 claimSchema;
+        uint16 from;
+        uint16 to;
+        uint8 slotIndex;
     }
 
-    constructor(
-        address _mtpValidator,
-        uint256 _fromTimestamp,
-        uint256 _toTimestamp
-    ) Ownable() {
+    constructor(address _mtpValidator, address _state) Ownable() {
         mtpValidator = IValidator(_mtpValidator);
-        fromTimestamp = _fromTimestamp;
-        toTimestamp = _toTimestamp;
+        state = IState(_state);
     }
 
-    uint256 public fromTimestamp;
-    uint256 public toTimestamp;
     IValidator public mtpValidator;
+    IState public state;
 
     // query id => Allowed Query
-    mapping(uint256 => AllowedQuery) private _allowedQueries;
+    mapping(uint256 => AllowedQuery) public allowedQueries;
 
     // query id => is query disabled
-    mapping(uint256 => bool) private _queryDisabled;
+    mapping(uint256 => bool) public queryDisabled;
 
     Counters.Counter private _currentAllowedQueryId;
 
-    // userId => queryId => isRegistered;
-    mapping(uint256 => mapping(uint256 => bool)) private _isRegistered;
-
-    // voter => queryId => registered amount
-    mapping(address => mapping(uint256 => uint256)) private _registeredAmount;
-
-    // voter => voting power
-    mapping(address => uint256) private _votingPower;
-
-    uint256 public totalVotingPower;
-
     event NewAllowedQuery(uint256);
     event StatusUpdated(uint256, bool);
-    event Registered(uint256, uint256, uint256, address indexed);
 
     function setMTPValidator(address _mtpValidator) external onlyOwner {
         mtpValidator = IValidator(_mtpValidator);
     }
 
-    function setFromTimestamp(uint256 _fromTimestamp) external onlyOwner {
-        fromTimestamp = _fromTimestamp;
+    function setState(address _state) external onlyOwner {
+        state = IState(_state);
     }
 
-    function setToTimestamp(uint256 _toTimestamp) external onlyOwner {
-        toTimestamp = _toTimestamp;
+    function addAllowedQueries(AllowedQuery memory query) external onlyOwner {
+        uint256 queryId = _currentAllowedQueryId.current();
+        allowedQueries[queryId] = query;
+        _currentAllowedQueryId.increment();
+        emit NewAllowedQuery(queryId);
+    }
+
+    function toggleAllowedQueries(uint256 queryId) external onlyOwner {
+        require(
+            queryId < _currentAllowedQueryId.current(),
+            "Ziden Register Metrics: queryId is out of range"
+        );
+        queryDisabled[queryId] = !queryDisabled[queryId];
+        emit StatusUpdated(queryId, queryDisabled[queryId]);
     }
 
     function getNumOfAllowedQueries() external view returns (uint256) {
         return _currentAllowedQueryId.current();
     }
 
-    function isQueryDisabled(uint256 queryId) external view returns (bool) {
-        return _queryDisabled[queryId];
-    }
-
-    function getAllowedQuery(uint256 queryId)
-        external
-        view
-        returns (AllowedQuery memory)
-    {
-        return _allowedQueries[queryId];
-    }
-
-    function addAllowedQuery(AllowedQuery memory query) external onlyOwner {
-        uint256 queryId = _currentAllowedQueryId.current();
-        _allowedQueries[queryId] = query;
-        _currentAllowedQueryId.increment();
-        emit NewAllowedQuery(queryId);
-    }
-
-    function setAllowedQueryStatus(uint256 queryId, bool status)
-        external
-        onlyOwner
-    {
-        _queryDisabled[queryId] = status;
-        emit StatusUpdated(queryId, status);
-    }
-
-    function isRegistered(uint256 userId, uint256 queryId)
-        external
-        view
-        returns (bool)
-    {
-        return _isRegistered[userId][queryId];
-    }
-
-    function getRegisteredAmount(address voter, uint256 queryId)
-        external
-        view
-        returns (uint256)
-    {
-        return _registeredAmount[voter][queryId];
-    }
-
-    function getVotingPower(address voter) external view returns (uint256) {
-        return _votingPower[voter];
-    }
-
-    function register(
+    function getVotingPower(
         uint256[2] memory a,
         uint256[2][2] memory b,
         uint256[2] memory c,
-        uint256[9] memory pubSigs,
-        uint256 queryId
-    ) external {
-        address voter = address(uint160(pubSigs[2]));
-        uint256 userId = pubSigs[0];
+        uint256[12] memory pubSigs,
+        uint256 queryId,
+        uint64 fromTimestamp,
+        uint64 toTimestamp
+    ) external view returns (uint256) {
 
         require(
             queryId < _currentAllowedQueryId.current(),
             "Ziden Register Metrics: queryId is out of range"
         );
         require(
-            !_queryDisabled[queryId],
+            !queryDisabled[queryId],
             "Ziden Register Metrics: query is disabled"
         );
-        require(
-            !_isRegistered[userId][queryId],
-            "Ziden Register Metrics: query is registered"
-        );
 
-        AllowedQuery memory allowedQuery = _allowedQueries[queryId];
+        AllowedQuery memory allowedQuery = allowedQueries[queryId];
 
         uint256 issuerId = pubSigs[4];
         require(
@@ -147,34 +92,45 @@ contract RegisterMetrics is Ownable {
             "Ziden Register Metrics: issuerId is not matched"
         );
 
-        IValidator.DurationQuery memory query;
-        query.deterministicValue = pubSigs[7];
-        query.compactInput = allowedQuery.compactInput;
-        query.mask = allowedQuery.mask;
-        query.circuitId = allowedQuery.circuitId;
-        query.fromTimestamp = fromTimestamp;
-        query.toTimestamp = toTimestamp;
-
-        uint256 oldAmount = _registeredAmount[voter][queryId];
-        _registeredAmount[voter][queryId] = query.deterministicValue;
-
-        uint256 oldVotingPower = oldAmount * allowedQuery.factor;
-        uint256 newVotingPower = query.deterministicValue * allowedQuery.factor;
-
-        _votingPower[voter] =
-            _votingPower[voter] -
-            oldVotingPower +
-            newVotingPower;
-
-        totalVotingPower = totalVotingPower - oldVotingPower + newVotingPower;
+        IValidator.Query memory query;
+        query.deterministicValue = pubSigs[10];
+        query.timestamp = uint64(pubSigs[6]);
+        query.mask = getMask(allowedQuery.from, allowedQuery.to);
+        query.slotIndex = allowedQuery.slotIndex;
+        query.claimSchema = allowedQuery.claimSchema;
 
         require(
-            mtpValidator.verifyInDuration(a, b, c, pubSigs, query),
+            pubSigs[9] == 3,
+            "register contract only supports GREATER_THAN operator"
+        );
+        query.operator = 3;
+
+        (, uint256 createAtTimestamp, , , , ) = state.getTransitionInfo(
+            pubSigs[3]
+        );
+        if (createAtTimestamp > fromTimestamp) {
+            return 0;
+        }
+        if (query.timestamp < toTimestamp) {
+            return 0;
+        }
+        (uint256 replaceAtTimestamp, , , , , ) = state.getTransitionInfo(
+            pubSigs[5]
+        );
+        if (replaceAtTimestamp != 0 && replaceAtTimestamp < toTimestamp) {
+            return 0;
+        }
+
+        require(
+            mtpValidator.verify(a, b, c, pubSigs, query),
             "Ziden Register Metrics: Invalid query MTP proof"
         );
 
-        _isRegistered[userId][queryId] = true;
+        return (query.deterministicValue >> allowedQuery.from) * allowedQuery.factor;
+    }
 
-        emit Registered(userId, queryId, query.deterministicValue, voter);
+    function getMask(uint16 from, uint16 to) internal pure returns(uint256){
+        require(to > from && to < 256, "invalid offsets");
+        return ((1 << (to - from)) - 1) << from;
     }
 }

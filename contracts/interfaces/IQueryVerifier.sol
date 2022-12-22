@@ -6,6 +6,6 @@ interface IQueryVerifier {
     uint[2] memory a, 
     uint[2][2] memory b, 
     uint[2] memory c, 
-    uint[9] memory inputs) 
+    uint[12] memory inputs) 
   external view returns (bool);
 }

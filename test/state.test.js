@@ -2,14 +2,35 @@ const hre = require("hardhat");
 const crypto = require("crypto");
 const path = require("path");
 const snarkjs = require("snarkjs");
+const { expect } = require("chai");
 
+const callData = async (proof, publicSignals) => {
+  const callData = (
+    await snarkjs.groth16.exportSolidityCallData(proof, publicSignals)
+  )
+    .toString()
+    .split(",")
+    .map((e) => {
+      return e.replaceAll(/([\[\]\s\"])/g, "");
+    });
+  let a,
+    b = [],
+    c,
+    public;
+  a = callData.slice(0, 2).map((e) => BigInt(e));
+  b[0] = callData.slice(2, 4).map((e) => BigInt(e));
+  b[1] = callData.slice(4, 6).map((e) => BigInt(e));
+  c = callData.slice(6, 8).map((e) => BigInt(e));
+  public = callData.slice(8, callData.length).map((e) => BigInt(e));
+  return { a, b, c, public };
+};
 describe("Test State contract", async () => {
-  let zidenjs, deployer, state, verifier;
+  let zidenjs, deployer, stateContract, verifier;
 
   it("Set up global params", async () => {
     zidenjs = await import("zidenjs");
     deployer = await hre.ethers.getSigner();
-    await zidenjs.global.setupParams();
+    await zidenjs.params.setupParams();
     console.log("Deployer's address : ", deployer.address);
   });
 
@@ -21,168 +42,103 @@ describe("Test State contract", async () => {
     await verifier.deployed();
 
     const State = await hre.ethers.getContractFactory("State");
-    state = await State.connect(deployer).deploy();
-    await state.deployed();
+    stateContract = await State.connect(deployer).deploy();
+    await stateContract.deployed();
 
-    await state.connect(deployer).initialize(verifier.address);
+    await stateContract.connect(deployer).initialize(verifier.address);
   });
 
-  let holder1Pk, holder2Pk, issuerPk;
-  let holder1AuthClaim, holder2AuthClaim, issuerAuthClaim;
-  let holder1ClaimsDb, holder1RevsDb, holder1RootsDb, holder1Tree;
-  let holder2ClaimsDb, holder2RevsDb, holder2RootsDb, holder2Tree;
-  let issuerClaimsDb, issuerRevsDb, issuerRootsDb, issuerTree;
-  let holder1Id, holder2Id, issuerId;
-  it("Generate 2 holders and 1 issuer", async () => {
-    holder1Pk = crypto.randomBytes(32);
-    holder2Pk = crypto.randomBytes(32);
-    issuerPk = crypto.randomBytes(32);
-
-    holder1AuthClaim = await zidenjs.claim.authClaim.newAuthClaimFromPrivateKey(
-      holder1Pk
-    );
-    holder2AuthClaim = await zidenjs.claim.authClaim.newAuthClaimFromPrivateKey(
-      holder2Pk
-    );
-    issuerAuthClaim = await zidenjs.claim.authClaim.newAuthClaimFromPrivateKey(
-      issuerPk
-    );
-
-    holder1ClaimsDb = new zidenjs.db.SMTLevelDb("trees/test_db/holder1Claims");
-    holder1RevsDb = new zidenjs.db.SMTLevelDb("trees/test_db/holder1Revs");
-    holder1RootsDb = new zidenjs.db.SMTLevelDb("trees/test_db/holder1Roots");
-
-    holder2ClaimsDb = new zidenjs.db.SMTLevelDb("trees/test_db/holder2Claims");
-    holder2RevsDb = new zidenjs.db.SMTLevelDb("trees/test_db/holder2Revs");
-    holder2RootsDb = new zidenjs.db.SMTLevelDb("trees/test_db/holder2Roots");
-
-    issuerClaimsDb = new zidenjs.db.SMTLevelDb("trees/test_db/issuerClaims");
-    issuerRevsDb = new zidenjs.db.SMTLevelDb("trees/test_db/issuerRevs");
-    issuerRootsDb = new zidenjs.db.SMTLevelDb("trees/test_db/issuerRoots");
-
-    holder1Tree = await zidenjs.trees.Trees.generateID(
-      [holder1AuthClaim],
-      holder1ClaimsDb,
-      holder1RevsDb,
-      holder1RootsDb,
-      zidenjs.claim.id.IDType.Default,
-      32,
-      zidenjs.trees.SMTType.BinSMT
-    );
-
-    holder2Tree = await zidenjs.trees.Trees.generateID(
-      [holder2AuthClaim],
-      holder2ClaimsDb,
-      holder2RevsDb,
-      holder2RootsDb,
-      zidenjs.claim.id.IDType.Default,
-      32,
-      zidenjs.trees.SMTType.BinSMT
-    );
-
-    issuerTree = await zidenjs.trees.Trees.generateID(
-      [issuerAuthClaim],
-      issuerClaimsDb,
-      issuerRevsDb,
-      issuerRootsDb,
-      zidenjs.claim.id.IDType.Default,
-      32,
-      zidenjs.trees.SMTType.BinSMT
-    );
-
-    holder1Id = zidenjs.utils.bitsToNum(holder1Tree.userID);
-    holder2Id = zidenjs.utils.bitsToNum(holder2Tree.userID);
-    issuerId = zidenjs.utils.bitsToNum(issuerTree.userID);
-
-    console.log("Holder 1 ID : ", holder1Id);
-    console.log("Holder 2 ID : ", holder2Id);
-    console.log("Issuer ID : ", issuerId);
+  let users = [];
+  const numberOfUsers = 10;
+  it("setup users", async () => {
+    for (let i = 0; i < numberOfUsers; i++) {
+      const privateKey = crypto.randomBytes(32);
+      const auth = zidenjs.auth.newAuthFromPrivateKey(privateKey);
+      const authsDb = new zidenjs.db.SMTLevelDb("db_test/user" + i + "/auths");
+      const claimsDb = new zidenjs.db.SMTLevelDb(
+        "db_test/user" + i + "/claims"
+      );
+      const authRevDb = new zidenjs.db.SMTLevelDb(
+        "db_test/user" + i + "/authRev"
+      );
+      const claimRevDb = new zidenjs.db.SMTLevelDb(
+        "db_test/user" + i + "/claimRev"
+      );
+      const state = await zidenjs.state.State.generateState(
+        [auth],
+        authsDb,
+        claimsDb,
+        authRevDb,
+        claimRevDb
+      );
+      const user = {
+        auths: [
+          {
+            privateKey,
+            value: auth,
+            isRevoked: false,
+          },
+        ],
+        claims: [],
+        state,
+      };
+      users.push(user);
+    }
   });
 
-  let holder1Claim, holder2Claim;
-
-  it("Issue claims for holder 1", async () => {
-    let schemaHash = zidenjs.claim.entry.schemaHashFromBigInt(
-      BigInt("123456789")
-    );
-
-    let h1IndexA, h1IndexB, h1ValueA, h1ValueB;
-    let h2IndexA, h2IndexB, h2ValueA, h2ValueB;
-    h1IndexA = Buffer.alloc(32, 0);
-    h1IndexA.write("Vitalik Buterin", "utf-8");
-    h1IndexB = Buffer.alloc(32, 0);
-    h1IndexB.writeBigInt64LE(BigInt(19940131));
-    h1ValueA = Buffer.alloc(32, 0);
-    h1ValueA.writeBigInt64LE(BigInt(100));
-    h1ValueB = Buffer.alloc(32, 0);
-    h1ValueB.writeBigInt64LE(BigInt(120));
-
-    h2IndexA = Buffer.alloc(32, 0);
-    h2IndexA.write("Changpeng Zhao", "utf-8");
-    h2IndexB = Buffer.alloc(32, 0);
-    h2IndexB.writeBigInt64LE(BigInt(19771009));
-    h2ValueA = Buffer.alloc(32, 0);
-    h2ValueA.writeBigInt64LE(BigInt(101));
-    h2ValueB = Buffer.alloc(32, 0);
-    h2ValueB.writeBigInt64LE(BigInt(111));
-
-    holder1Claim = zidenjs.claim.entry.newClaim(
+  it("user 0 add a new auth and new claim", async () => {
+    const newPrivateKey = crypto.randomBytes(32);
+    const newAuth = zidenjs.auth.newAuthFromPrivateKey(newPrivateKey);
+    const {
+      newClaim,
+      schemaHashFromBigInt,
+      withIndexID,
+      withIndexData,
+      withValueData,
+    } = zidenjs.claim;
+    const { bitsToNum, numToBits } = zidenjs.utils;
+    const schemaHash = schemaHashFromBigInt(BigInt("42136162"));
+    const claim = newClaim(
       schemaHash,
-      zidenjs.claim.entry.withIndexData(h1IndexA, h1IndexB),
-      zidenjs.claim.entry.withValueData(h1ValueA, h1ValueB)
+      withIndexID(users[1].state.userID),
+      withIndexData(numToBits(BigInt("1234")), numToBits(BigInt("7347"))),
+      withValueData(numToBits(BigInt("432987492")), numToBits(BigInt("4342")))
     );
-
-    holder2Claim = zidenjs.claim.entry.newClaim(
-      schemaHash,
-      zidenjs.claim.entry.withIndexData(h2IndexA, h2IndexB),
-      zidenjs.claim.entry.withValueData(h2ValueA, h2ValueB)
-    );
-
-    const stateTransitionInput =
-      await zidenjs.witness.stateTransition.stateTransitionWitness(
-        issuerPk,
-        issuerAuthClaim,
-        issuerTree,
-        [holder1Claim],
+    const inputs =
+      await zidenjs.stateTransition.stateTransitionWitnessWithPrivateKey(
+        users[0].auths[0].privateKey,
+        users[0].auths[0].value,
+        users[0].state,
+        [newAuth],
+        [claim],
+        [],
         []
       );
-
-    console.log(stateTransitionInput);
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(
-      stateTransitionInput,
-      path.resolve("./build/state transition/stateTransition.wasm"),
-      path.resolve("./build/state transition/stateTransition.zkey")
+      inputs,
+      "build/stateTransition.wasm",
+      "build/stateTransition.zkey"
     );
-    const callData = (
-      await snarkjs.groth16.exportSolidityCallData(proof, publicSignals)
-    )
-      .toString()
-      .split(",")
-      .map((e) => {
-        return e.replaceAll(/([\[\]\s\"])/g, "");
-      });
-    let a,
-      b = [],
-      c,
-      public;
-    a = callData.slice(0, 2).map((e) => BigInt(e));
-    b[0] = callData.slice(2, 4).map((e) => BigInt(e));
-    b[1] = callData.slice(4, 6).map((e) => BigInt(e));
-    c = callData.slice(6, 8).map((e) => BigInt(e));
-    public = callData.slice(8, callData.length).map((e) => BigInt(e));
-
-    const tx = await state.transitState(
+    const { a, b, c, public } = await callData(proof, publicSignals);
+    const tx = await stateContract.transitState(
       public[0],
       public[1],
       public[2],
-      public[3],
+      public[3] === BigInt(0) ? false : true,
       a,
       b,
       c
     );
-
     await tx.wait();
+    const newState = await stateContract.getState(
+      bitsToNum(users[0].state.userID)
+    );
+    expect(newState.toString()).to.be.eq(public[2].toString());
 
-    console.log(await state.getState(issuerId));
+    users[0].auths.push({
+      value: newAuth,
+      privateKey: newPrivateKey,
+      isRevoked: false,
+    });
   });
 });

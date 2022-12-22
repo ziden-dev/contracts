@@ -1,4 +1,5 @@
 const hre = require("hardhat");
+const fs = require("fs");
 
 async function main() {
   const deployer = await hre.ethers.getSigner();
@@ -19,18 +20,11 @@ async function main() {
   const queryMTPVerifier = await QueryMTPVerifier.connect(deployer).deploy();
   await queryMTPVerifier.deployed();
 
-  const QuerySigVerifier = await hre.ethers.getContractFactory(
-    "QuerySigVerifier"
-  );
-  const querySigVerifier = await QuerySigVerifier.deploy();
-  await querySigVerifier.deployed();
-
   console.log(
     "========================== Verifiers deployed =========================="
   );
   console.log("StateTransitionVerifier at : ", stateTransitionVerifier.address);
   console.log("QueryMTPVerifier at : ", queryMTPVerifier.address);
-  console.log("QuerySigVerifier at : ", querySigVerifier.address);
 
   // ========================== Deploy state contract ==========================
 
@@ -43,7 +37,8 @@ async function main() {
   );
   console.log("State at : ", state.address);
 
-  await state.connect(deployer).initialize(stateTransitionVerifier.address);
+  const initState = await state.connect(deployer).initialize(stateTransitionVerifier.address);
+  await initState.wait();
   console.log("State's owner : ", await state.owner());
   console.log("State verifier at : ", await state.verifier());
 
@@ -69,25 +64,27 @@ async function main() {
   );
   console.log("QueryMTPValidator's state : ", await queryMTPvalidator.state());
 
-  // ========================== Deploy QuerySigValidator ==========================
+  // ========================== Deploy Register Ziden Metrics ==========================
 
-  const QuerySigValidator = await hre.ethers.getContractFactory(
-    "QuerySigValidator"
+  const RegisterMetrics = await hre.ethers.getContractFactory(
+    "RegisterMetrics"
   );
-  const querySigValidator = await QuerySigValidator.deploy();
-  await querySigValidator.deployed();
+  const registerContract = await RegisterMetrics.deploy(
+    queryMTPvalidator.address,
+    state.address
+  );
+  await registerContract.deployed();
   console.log(
-    "========================== QuerySigValidator deployed =========================="
+    "========================== Register Ziden Metrics deployed =========================="
   );
 
-  await querySigValidator
-    .connect(deployer)
-    .initialize(querySigVerifier.address, state.address);
-  console.log(
-    "QuerySigValidator's verifier : ",
-    await querySigValidator.verifier()
-  );
-  console.log("QuerySigValidator's state : ", await querySigValidator.state());
+  const addresses = {
+    state: state.address,
+    mtpValidator: queryMTPvalidator.address,
+    register: registerContract.address,
+  };
+
+  fs.writeFileSync("address.json", JSON.stringify(addresses));
 }
 
 main().catch((err) => {

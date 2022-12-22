@@ -1,5 +1,5 @@
 {
-  "name": "hardhat-project",
+  "name": "@zidendev/ziden-contracts",
   "devDependencies": {
     "@openzeppelin/contracts": "^4.8.0",
     "hardhat": "^2.11.2"
