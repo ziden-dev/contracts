@@ -279,7 +279,7 @@ describe("Full test for MTP and Sig validator", async () => {
         hashFunction,
         F
       );
-    console.log(queryMTPInput.compactInput);
+    console.log(zidenjs.utils.bitsToNum(issuerClaim.getSubjectFlag()));
 
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(
       queryMTPInput,

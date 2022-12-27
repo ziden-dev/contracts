@@ -91,7 +91,7 @@ contract QueryMTPValidator is OwnableUpgradeable, IValidator{
         require(GenesisUtils.isGenesisState(userId, userState), "User state isn't genesis nor in state contract");
       } else {
         // The non-empty state is returned, and it’s not equal to the state that the user has provided.
-        require(userStateFromContract == userState, "User state isn't lastest");
+        require(userStateFromContract == userState, "User state isn't latest");
       }
 
       // 2. Issuer state must be registered in state contracts or be genesis

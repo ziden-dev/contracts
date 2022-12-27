@@ -6,7 +6,6 @@ import "../lib/GenesisUtil.sol";
 import "../interfaces/IValidator.sol";
 import "../interfaces/IState.sol";
 import "../interfaces/IQueryVerifier.sol";
-import "hardhat/console.sol";
 
 contract QuerySigValidator is OwnableUpgradeable, IValidator{
   string constant CIRCUIT_ID = "credentialAtomicQuerySig";
@@ -56,8 +55,6 @@ contract QuerySigValidator is OwnableUpgradeable, IValidator{
         bytes memory cutCompactInputBytes = BytesLib.slice(compactInputBytes,16,16);
         cutCompactInputBytes = BytesLib.concat(typDefault,cutCompactInputBytes);
         uint256 cutCompactInp = GenesisUtils.toUint256(cutCompactInputBytes);
-        console.log(cutCompactInp);
-        console.log(query.compactInput);
         require(cutCompactInp == query.compactInput, "wrong compact input has been used for proof generation");
     }
     require(inputs[7] == query.deterministicValue, "Wrong deterministic value has been used for proof generation");
