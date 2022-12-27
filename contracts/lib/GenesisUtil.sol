@@ -2,7 +2,6 @@
 pragma solidity 0.8.7;
 
 import "solidity-bytes-utils/contracts/BytesLib.sol";
-import "hardhat/console.sol";
 
 library GenesisUtils {
     /**
