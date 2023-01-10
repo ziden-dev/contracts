@@ -2,7 +2,7 @@ const hre = require("hardhat");
 const crypto = require("crypto");
 const path = require("path");
 const snarkjs = require("snarkjs");
-const { expect } = require("chai");
+const { expect, use } = require("chai");
 
 const callData = async (proof, publicSignals) => {
   const callData = (
@@ -24,6 +24,7 @@ const callData = async (proof, publicSignals) => {
   public = callData.slice(8, callData.length).map((e) => BigInt(e));
   return { a, b, c, public };
 };
+
 describe("Test State contract", async () => {
   let zidenjs, deployer, stateContract, verifier;
 
@@ -82,11 +83,13 @@ describe("Test State contract", async () => {
         claims: [],
         state,
       };
+      //   console.log("user ", i, " = ", user);
       users.push(user);
     }
   });
 
   it("user 0 add a new auth and new claim", async () => {
+    // console.log("users = ", users);
     const newPrivateKey = crypto.randomBytes(32);
     const newAuth = zidenjs.auth.newAuthFromPrivateKey(newPrivateKey);
     const {
@@ -98,12 +101,16 @@ describe("Test State contract", async () => {
     } = zidenjs.claim;
     const { bitsToNum, numToBits } = zidenjs.utils;
     const schemaHash = schemaHashFromBigInt(BigInt("42136162"));
+
     const claim = newClaim(
       schemaHash,
-      withIndexID(users[1].state.userID),
-      withIndexData(numToBits(BigInt("1234")), numToBits(BigInt("7347"))),
-      withValueData(numToBits(BigInt("432987492")), numToBits(BigInt("4342")))
+      //withIndexID(users[1].state.userID),
+      //withIndexData(numToBits(BigInt("1234")), numToBits(BigInt("7347")))
+      //withValueData(numToBits(BigInt("432987492")), numToBits(BigInt("4342")))
+      withIndexData(Buffer.alloc(30, 1234), Buffer.alloc(30, 7347)),
+      withValueData(Buffer.alloc(30, 432987492), Buffer.alloc(30, 4342))
     );
+
     const inputs =
       await zidenjs.stateTransition.stateTransitionWitnessWithPrivateKey(
         users[0].auths[0].privateKey,
@@ -119,7 +126,9 @@ describe("Test State contract", async () => {
       "build/stateTransition.wasm",
       "build/stateTransition.zkey"
     );
+
     const { a, b, c, public } = await callData(proof, publicSignals);
+
     const tx = await stateContract.transitState(
       public[0],
       public[1],
@@ -130,6 +139,7 @@ describe("Test State contract", async () => {
       c
     );
     await tx.wait();
+
     const newState = await stateContract.getState(
       bitsToNum(users[0].state.userID)
     );

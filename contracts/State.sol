@@ -121,7 +121,7 @@ contract State is OwnableUpgradeable {
         ];
         require(
             verifier.verifyProof(a, b, c, inputs),
-            "zero-knowledge proof of state transition is not valid"
+            "zero-knowledge proof of state transition is not valid haha error here"
         );
 
         identities[id].push(

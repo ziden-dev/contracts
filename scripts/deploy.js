@@ -4,7 +4,6 @@ const fs = require("fs");
 async function main() {
   const deployer = await hre.ethers.getSigner();
   console.log("Deployer's address: ", deployer.address);
-
   // ========================== Deploy verifier contracts ==========================
   const StateTransitionVerifier = await hre.ethers.getContractFactory(
     "StateTransitionVerifier"
@@ -36,8 +35,9 @@ async function main() {
     "========================== State deployed =========================="
   );
   console.log("State at : ", state.address);
-
-  const initState = await state.connect(deployer).initialize(stateTransitionVerifier.address);
+  const initState = await state
+    .connect(deployer)
+    .initialize(stateTransitionVerifier.address);
   await initState.wait();
   console.log("State's owner : ", await state.owner());
   console.log("State verifier at : ", await state.verifier());

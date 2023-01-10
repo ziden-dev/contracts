@@ -27,9 +27,7 @@ contract QueryMTPValidator is OwnableUpgradeable, IValidator {
         __Ownable_init();
     }
 
-    function setRevocationStateExpirationTime(uint256 expirationTime)
-        public
-        onlyOwner
+    function setRevocationStateExpirationTime(uint256 expirationTime) public onlyOwner
     {
         revocationStateExpirationTime = expirationTime;
     }
