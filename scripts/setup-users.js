@@ -45,9 +45,6 @@ async function main() {
     const auth = zidenjs.auth.newAuthFromPrivateKey(privateKey);
     const authsDb = new zidenjs.db.SMTLevelDb("db_test/user" + i + "/auths");
     const claimsDb = new zidenjs.db.SMTLevelDb("db_test/user" + i + "/claims");
-    const authRevDb = new zidenjs.db.SMTLevelDb(
-      "db_test/user" + i + "/authRev"
-    );
     const claimRevDb = new zidenjs.db.SMTLevelDb(
       "db_test/user" + i + "/claimRev"
     );
@@ -55,7 +52,6 @@ async function main() {
       [auth],
       authsDb,
       claimsDb,
-      authRevDb,
       claimRevDb
     );
 
@@ -108,12 +104,8 @@ async function main() {
 
   let claim0, claim1, claim2;
 
-  const {
-    newClaim,
-    schemaHashFromBigInt,
-    withIndexID,
-    withSlotData,
-  } = zidenjs.claim;
+  const { newClaim, schemaHashFromBigInt, withIndexID, withSlotData } =
+    zidenjs.claim;
   const { numToBits, setBits } = zidenjs.utils;
   claim0 = newClaim(
     schemaHashFromBigInt(query0.claimSchema),

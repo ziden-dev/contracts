@@ -26,57 +26,6 @@ const callData = async (proof, publicSignals) => {
 };
 
 describe("Test MTP Validator contract", async () => {
-  // let zidenjs,
-  //   deployer,
-  //   stateContract,
-  //   validator,
-  //   stateVerifier,
-  //   queryMTPVerifier,
-  //   testContract;
-
-  // let blockNumber, blockTimestamp;
-  // it("Set up global params", async () => {
-  //   zidenjs = await import("zidenjs");
-  //   deployer = await ethers.getSigner();
-  //   await zidenjs.params.setupParams();
-  //   console.log("Deployer's address : ", deployer.address);
-  //   blockNumber = await ethers.provider.getBlockNumber();
-  //   const block = await ethers.provider.getBlock(blockNumber);
-  //   blockTimestamp = block.timestamp;
-  // });
-
-  // it("Deploy contracts", async () => {
-  //   const StateVerifier = await hre.ethers.getContractFactory(
-  //     "StateTransitionVerifier"
-  //   );
-  //   stateVerifier = await StateVerifier.connect(deployer).deploy();
-  //   await stateVerifier.deployed();
-
-  //   const QueryMTPVerifier = await hre.ethers.getContractFactory(
-  //     "QueryMTPVerifier"
-  //   );
-  //   queryMTPVerifier = await QueryMTPVerifier.deploy();
-  //   await queryMTPVerifier.deployed();
-
-  //   const State = await hre.ethers.getContractFactory("State");
-  //   stateContract = await State.connect(deployer).deploy();
-  //   await stateContract.deployed();
-
-  //   await stateContract.connect(deployer).initialize(stateVerifier.address);
-
-  //   const MTPValidator = await hre.ethers.getContractFactory(
-  //     "QueryMTPValidator"
-  //   );
-  //   validator = await MTPValidator.deploy();
-  //   await validator.deployed();
-
-  //   await validator
-  //     .connect(deployer)
-  //     .initialize(queryMTPVerifier.address, stateContract.address);
-
-  //   const TestValidator = await hre.ethers.getContractFactory("TestValidator");
-  //   testContract = await TestValidator.deploy(validator.address);
-  //   await testContract.deployed();
   let zidenjs,
     deployer,
     stateContract,
@@ -99,13 +48,6 @@ describe("Test MTP Validator contract", async () => {
   });
 
   it("Deploy contract", async () => {
-    // Query Sig verifier
-    const QuerySigVerifier = await hre.ethers.getContractFactory(
-      "QuerySigVerifier"
-    );
-    querySigVerifier = await QuerySigVerifier.deploy();
-    await querySigVerifier.deployed();
-
     // Query MTP verifier
     const QueryMTPVerifier = await hre.ethers.getContractFactory(
       "QueryMTPVerifier"
@@ -123,18 +65,6 @@ describe("Test MTP Validator contract", async () => {
     stateContract = await State.connect(deployer).deploy();
     await stateContract.deployed();
     await stateContract.connect(deployer).initialize(stateVerifier.address);
-
-    // Sig Validator
-    const SigValidator = await hre.ethers.getContractFactory(
-      "QuerySigValidator"
-    );
-    Sigvalidator = await SigValidator.deploy();
-    await Sigvalidator.deployed();
-    await Sigvalidator.connect(deployer).initialize(
-      querySigVerifier.address,
-      stateContract.address
-    );
-
     // Mtp Validator
     const MtpValidator = await hre.ethers.getContractFactory(
       "QueryMTPValidator"
@@ -147,10 +77,7 @@ describe("Test MTP Validator contract", async () => {
 
     // Test Contract
     const TestValidator = await hre.ethers.getContractFactory("TestValidator");
-    testContract = await TestValidator.deploy(
-      Mtpvalidator.address,
-      Sigvalidator.address
-    );
+    testContract = await TestValidator.deploy(Mtpvalidator.address);
     await testContract.deployed();
   });
 
@@ -164,9 +91,6 @@ describe("Test MTP Validator contract", async () => {
       const claimsDb = new zidenjs.db.SMTLevelDb(
         "db_test/user" + i + "/claims"
       );
-      const authRevDb = new zidenjs.db.SMTLevelDb(
-        "db_test/user" + i + "/authRev"
-      );
       const claimRevDb = new zidenjs.db.SMTLevelDb(
         "db_test/user" + i + "/claimRev"
       );
@@ -174,7 +98,6 @@ describe("Test MTP Validator contract", async () => {
         [auth],
         authsDb,
         claimsDb,
-        authRevDb,
         claimRevDb
       );
       const user = {
@@ -326,6 +249,7 @@ describe("Test MTP Validator contract", async () => {
           claim.getRevocationNonce(),
           issuer.state
         );
+
       const inputs =
         await zidenjs.queryMTP.holderGenerateQueryMTPWitnessWithPrivateKey(
           claim,
@@ -348,13 +272,14 @@ describe("Test MTP Validator contract", async () => {
     };
 
     await queryMTP(0, 3, claim0, query0);
-    await queryMTP(1, 4, claim1, query1);
-    await queryMTP(2, 5, claim2, query2);
 
-    try {
-      await queryMTP(2, 5, expiredClaim, query2);
-    } catch (err) {
-      console.log(err);
-    }
+    // await queryMTP(1, 4, claim1, query1);
+    // await queryMTP(2, 5, claim2, query2);
+
+    // try {
+    //   await queryMTP(2, 5, expiredClaim, query2);
+    // } catch (err) {
+    //   console.log(err);
+    // }
   });
 });

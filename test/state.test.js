@@ -59,9 +59,6 @@ describe("Test State contract", async () => {
       const claimsDb = new zidenjs.db.SMTLevelDb(
         "db_test/user" + i + "/claims"
       );
-      const authRevDb = new zidenjs.db.SMTLevelDb(
-        "db_test/user" + i + "/authRev"
-      );
       const claimRevDb = new zidenjs.db.SMTLevelDb(
         "db_test/user" + i + "/claimRev"
       );
@@ -69,7 +66,6 @@ describe("Test State contract", async () => {
         [auth],
         authsDb,
         claimsDb,
-        authRevDb,
         claimRevDb
       );
       const user = {

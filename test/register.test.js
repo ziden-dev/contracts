@@ -93,9 +93,9 @@ describe("Test MTP Validator contract", async () => {
       const claimsDb = new zidenjs.db.SMTLevelDb(
         "db_test/user" + i + "/claims"
       );
-      const authRevDb = new zidenjs.db.SMTLevelDb(
-        "db_test/user" + i + "/authRev"
-      );
+      // const authRevDb = new zidenjs.db.SMTLevelDb(
+      //   "db_test/user" + i + "/authRev"
+      // );
       const claimRevDb = new zidenjs.db.SMTLevelDb(
         "db_test/user" + i + "/claimRev"
       );
@@ -103,7 +103,6 @@ describe("Test MTP Validator contract", async () => {
         [auth],
         authsDb,
         claimsDb,
-        authRevDb,
         claimRevDb
       );
       const user = {
@@ -165,6 +164,7 @@ describe("Test MTP Validator contract", async () => {
       withIndexID,
       withSlotData,
       withExpirationDate,
+      getVersion,
     } = zidenjs.claim;
     const { numToBits, setBits } = zidenjs.utils;
     claim0 = newClaim(
@@ -241,7 +241,7 @@ describe("Test MTP Validator contract", async () => {
 
   // mask: 00..00               1111..111         00..00
   //       (256 - to) bits 0    (to-from) bits 1  from bits 0
-  
+
   it("setup allowed queries", async () => {
     const { bitsToNum } = zidenjs.utils;
     const setupAllowedQuery = async (issuerIndex, query, factor) => {
@@ -274,6 +274,8 @@ describe("Test MTP Validator contract", async () => {
       voter,
       queryId
     ) => {
+      console.log(" claimVersion =", claim.getVersion());
+
       const issuer = users[issuerIndex];
       const holder = users[holderIndex];
       const kycMTPInput = await zidenjs.queryMTP.kycGenerateQueryMTPInput(
