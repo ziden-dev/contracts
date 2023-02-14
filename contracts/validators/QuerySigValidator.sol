@@ -6,7 +6,6 @@ import "../lib/GenesisUtil.sol";
 import "../interfaces/IValidator.sol";
 import "../interfaces/IState.sol";
 import "../interfaces/IQueryVerifier.sol";
-
 contract QuerySigValidator is OwnableUpgradeable, IValidator{
   string constant CIRCUIT_ID = "credentialAtomicQuerySig";
   uint256 constant CHALLENGE_INDEX = 3;
@@ -51,10 +50,10 @@ contract QuerySigValidator is OwnableUpgradeable, IValidator{
     
     {
         bytes memory typDefault = hex"00000000000000000000000000000000";
-        bytes memory compactInputBytes = GenesisUtils.int256ToBytes(inputs[6]);
-        bytes memory cutCompactInputBytes = BytesLib.slice(compactInputBytes,16,16);
+        bytes memory compactInputBytes = GenesisUtils.int256ToBytes(inputs[6]*4);
+        bytes memory cutCompactInputBytes = BytesLib.slice(compactInputBytes,15,17);
         cutCompactInputBytes = BytesLib.concat(typDefault,cutCompactInputBytes);
-        uint256 cutCompactInp = GenesisUtils.toUint256(cutCompactInputBytes);
+        uint256 cutCompactInp = GenesisUtils.toUint256(cutCompactInputBytes)/4;
         require(cutCompactInp == query.compactInput, "wrong compact input has been used for proof generation");
     }
     require(inputs[7] == query.deterministicValue, "Wrong deterministic value has been used for proof generation");

@@ -66,11 +66,11 @@ contract QueryMTPValidator is OwnableUpgradeable, IValidator{
     ) external view override returns (bool r){
       //verify compact input
       {
-        bytes memory typDefault = hex"00000000000000000000000000000000";
-        bytes memory compactInputBytes = GenesisUtils.int256ToBytes(inputs[6]);
-        bytes memory cutCompactInputBytes = BytesLib.slice(compactInputBytes,16,16);
+        bytes memory typDefault = hex"000000000000000000000000000000";
+        bytes memory compactInputBytes = GenesisUtils.int256ToBytes(inputs[6]*4);
+        bytes memory cutCompactInputBytes = BytesLib.slice(compactInputBytes,15,17);
         cutCompactInputBytes = BytesLib.concat(typDefault,cutCompactInputBytes);
-        uint256 cutCompactInp = GenesisUtils.toUint256(cutCompactInputBytes);
+        uint256 cutCompactInp = GenesisUtils.toUint256(cutCompactInputBytes)/4;
         require(cutCompactInp == query.compactInput, "wrong compact input has been used for proof generation");
       }
       // verify query
