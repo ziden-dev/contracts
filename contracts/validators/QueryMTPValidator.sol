@@ -27,10 +27,9 @@ contract QueryMTPValidator is OwnableUpgradeable, IValidator {
         __Ownable_init();
     }
 
-    function setRevocationStateExpirationTime(uint256 expirationTime)
-        public
-        onlyOwner
-    {
+    function setRevocationStateExpirationTime(
+        uint256 expirationTime
+    ) public onlyOwner {
         revocationStateExpirationTime = expirationTime;
     }
 
@@ -46,13 +45,10 @@ contract QueryMTPValidator is OwnableUpgradeable, IValidator {
     // 9: operator
     // 10: deterministicValue
     // 11: mask
-    function verify(
-        uint256[2] memory a,
-        uint256[2][2] memory b,
-        uint256[2] memory c,
+    function validateInputs(
         uint256[12] memory inputs,
         Query memory query
-    ) external view override returns (bool r) {
+    ) internal view {
         // verify query
         require(
             inputs[6] == uint256(query.timestamp),
@@ -150,8 +146,36 @@ contract QueryMTPValidator is OwnableUpgradeable, IValidator {
                 }
             }
         }
+    }
 
+    function verify(
+        uint256[2] memory a,
+        uint256[2][2] memory b,
+        uint256[2] memory c,
+        uint256[12] memory inputs,
+        Query memory query
+    ) external view override returns (bool r) {
+        validateInputs(inputs, query);
         require(verifier.verifyProof(a, b, c, inputs), "MTP not valid");
+        return true;
+    }
+
+    function verifyBatch(
+        uint256[] memory in_proof, // proof itself, length is 8 * num_proofs
+        uint256[] memory proof_inputs, // public inputs, length is num_inputs * num_proofs
+        uint256 num_proofs,
+        Query memory query
+    ) external view override returns (bool r) {
+        require(proof_inputs.length == 12 * num_proofs, "invalid inputs size");
+        require(in_proof.length == 8 * num_proofs, "invalid proof size");
+        for (uint256 i = 0; i < num_proofs; i++) {
+            uint256[12] memory inputs;
+            for(uint256 j = 0; j < 12; j++){
+                inputs[j] = proof_inputs[j + i * 12];
+            }
+            validateInputs(inputs, query);
+        }
+        require(verifier.verifyBatch(in_proof, proof_inputs, num_proofs), "MTP not valid");
         return true;
     }
 }

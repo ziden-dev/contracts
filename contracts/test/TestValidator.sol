@@ -30,4 +30,23 @@ contract TestValidator {
             nonce++;
         }
     }
+
+    function verifyBatch(
+        uint256[] memory in_proof, // proof itself, length is 8 * num_proofs
+        uint256[] memory proof_inputs, // public inputs, length is num_inputs * num_proofs
+        uint256 num_proofs
+    ) external {
+        IValidator.Query memory query;
+        query.timestamp = uint64(proof_inputs[6]);
+        query.claimSchema = uint128(proof_inputs[7]);
+        query.slotIndex = uint8(proof_inputs[8]);
+        query.operator = uint8(proof_inputs[9]);
+        query.deterministicValue = proof_inputs[10];
+        query.mask = proof_inputs[11];
+        if (
+            mtpValidator.verifyBatch(in_proof, proof_inputs, num_proofs, query)
+        ) {
+            nonce++;
+        }
+    }
 }

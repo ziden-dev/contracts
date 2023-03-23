@@ -12,6 +12,10 @@
 //
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.7;
+
+import "./SingleVerifier.sol";
+import "./BatchVerifier.sol";
+
 library Pairing {
     struct G1Point {
         uint X;
@@ -163,6 +167,9 @@ library Pairing {
 }
 contract QueryMTPVerifier {
     using Pairing for *;
+    using BatchVerifier for *;
+    using SingleVerifier for *;
+
     struct VerifyingKey {
         Pairing.G1Point alfa1;
         Pairing.G2Point beta2;
@@ -267,6 +274,36 @@ contract QueryMTPVerifier {
         );                                      
         
     }
+
+        function verifyingKeyArray()
+        internal
+        pure
+        returns (uint256[14] memory in_vk, uint256[] memory vk_gammaABC)
+    {
+        VerifyingKey memory vk = verifyingKey();
+
+        in_vk[0] = vk.alfa1.X;
+        in_vk[1] = vk.alfa1.Y;
+        in_vk[2] = vk.beta2.X[0];
+        in_vk[3] = vk.beta2.X[1];
+        in_vk[4] = vk.beta2.Y[0];
+        in_vk[5] = vk.beta2.Y[1];
+        in_vk[6] = vk.gamma2.X[0];
+        in_vk[7] = vk.gamma2.X[1];
+        in_vk[8] = vk.gamma2.Y[0];
+        in_vk[9] = vk.gamma2.Y[1];
+        in_vk[10] = vk.delta2.X[0];
+        in_vk[11] = vk.delta2.X[1];
+        in_vk[12] = vk.delta2.Y[0];
+        in_vk[13] = vk.delta2.Y[1];
+
+        vk_gammaABC = new uint256[](vk.IC.length * 2);
+        for (uint256 i = 0; i < vk.IC.length; i++) {
+            vk_gammaABC[2 * i] = vk.IC[i].X;
+            vk_gammaABC[2 * i + 1] = vk.IC[i].Y;
+        }
+    }
+
     function verify(uint[] memory input, Proof memory proof) internal view returns (uint) {
         uint256 snark_scalar_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
         VerifyingKey memory vk = verifyingKey();
@@ -306,5 +343,23 @@ contract QueryMTPVerifier {
         } else {
             return false;
         }
+    }
+
+    /// @return r  bool true if proof is valid
+    function verifyBatch(
+        uint256[] memory in_proof, // proof itself, length is 8 * num_proofs
+        uint256[] memory proof_inputs, // public inputs, length is num_inputs * num_proofs
+        uint256 num_proofs
+    ) public view returns (bool r) {
+        (uint256[14] memory in_vk, uint256[] memory vk_gammaABC) = verifyingKeyArray();
+        r = BatchVerifier.BatchVerify(in_vk, vk_gammaABC, in_proof, proof_inputs, num_proofs);
+    }
+
+    /// @return r  bool true if proof is valid
+    function verifySingle(
+        uint256[8] memory in_proof, uint256[] memory proof_inputs
+    ) public view returns (bool r) {
+        (uint256[14] memory in_vk, uint256[] memory vk_gammaABC) = verifyingKeyArray();
+        r = SingleVerifier.Verify(in_vk, vk_gammaABC, in_proof, proof_inputs);
     }
 }

@@ -19,4 +19,10 @@ interface IValidator {
         Query memory query
     ) external view returns (bool r);
 
+    function verifyBatch(
+        uint256[] memory in_proof, // proof itself, length is 8 * num_proofs
+        uint256[] memory proof_inputs, // public inputs, length is num_inputs * num_proofs
+        uint256 num_proofs,
+        Query memory query
+    ) external view returns (bool r);
 }

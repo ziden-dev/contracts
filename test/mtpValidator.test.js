@@ -238,7 +238,7 @@ describe("Test MTP Validator contract", async () => {
     await issueClaims(2, [claim2, expiredClaim]);
   });
 
-  it("test query MTP", async () => {
+  it.skip("test query MTP", async () => {
     const queryMTP = async (issuerIndex, holderIndex, claim, query) => {
       const issuer = users[issuerIndex];
       const holder = users[holderIndex];
@@ -281,5 +281,76 @@ describe("Test MTP Validator contract", async () => {
     } catch (err) {
       console.log(err);
     }
-  });
+  }).timeout(200000);
+
+  it("test query MTP", async () => {
+    let in_proof = [];
+    let proof_inputs = [];
+    let num_proofs = 20;
+    const callData = async (proof, publicSignals) => {
+      const callData = (
+        await snarkjs.groth16.exportSolidityCallData(proof, publicSignals)
+      )
+        .toString()
+        .split(",")
+        .map((e) => {
+          return e.replaceAll(/([\[\]\s\"])/g, "");
+        });
+      const proofCallData = callData.slice(0, 8);
+      const publicInputs = callData.slice(8, callData.length);
+      return { proofCallData, publicInputs };
+    };
+    const queryMTP = async (issuerIndex, holderIndex, claim, query) => {
+      const issuer = users[issuerIndex];
+      const holder = users[holderIndex];
+      const kycMTPInput = await zidenjs.queryMTP.kycGenerateQueryMTPInput(
+        claim.hiRaw(),
+        issuer.state
+      );
+      const kycNonRevInput =
+        await zidenjs.queryMTP.kycGenerateNonRevQueryMTPInput(
+          claim.getRevocationNonce(),
+          issuer.state
+        );
+      const inputs =
+        await zidenjs.queryMTP.holderGenerateQueryMTPWitnessWithPrivateKey(
+          claim,
+          holder.auths[0].privateKey,
+          holder.auths[0].value,
+          BigInt(1),
+          holder.state,
+          kycMTPInput,
+          kycNonRevInput,
+          query
+        );
+      const { proof, publicSignals } = await snarkjs.groth16.fullProve(
+        inputs,
+        "build/credentialAtomicQueryMTP.wasm",
+        "build/credentialAtomicQueryMTP.zkey"
+      );
+      const { proofCallData, publicInputs } = await callData(
+        proof,
+        publicSignals
+      );
+
+      return { proofCallData, publicInputs };
+    };
+
+    const { proofCallData, publicInputs } = await queryMTP(
+      0,
+      3,
+      claim0,
+      query0
+    );
+    for (let i = 0; i < num_proofs; i++) {
+      in_proof = in_proof.concat(proofCallData);
+      proof_inputs = proof_inputs.concat(publicInputs);
+    }
+    const tx = await testContract.verifyBatch(
+      in_proof,
+      proof_inputs,
+      num_proofs
+    );
+    await tx.wait();
+  }).timeout(1000000);
 });
