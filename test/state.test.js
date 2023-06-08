@@ -69,11 +69,8 @@ describe("Test State contract", async () => {
         [auth],
         authsDb,
         claimsDb,
-        authRevDb,
         claimRevDb
       );
-
-      const proof = await state.generateAuthExistsProof(auth.authHi);
 
       const user = {
         auths: [
@@ -90,7 +87,7 @@ describe("Test State contract", async () => {
     }
   });
 
-  it.skip("user 0 add a new auth and new claim", async () => {
+  it("user 0 add a new auth and new claim", async () => {
     const newPrivateKey = crypto.randomBytes(32);
     const newAuth = zidenjs.auth.newAuthFromPrivateKey(newPrivateKey);
     const {
@@ -105,14 +102,16 @@ describe("Test State contract", async () => {
     const claim = newClaim(
       schemaHash,
       withIndexID(users[1].state.userID),
-      withIndexData(numToBits(BigInt("1234")), numToBits(BigInt("7347"))),
-      withValueData(numToBits(BigInt("432987492")), numToBits(BigInt("4342")))
+      withIndexData(Buffer.alloc(30, 1234), Buffer.alloc(30, 7347)),
+      withValueData(Buffer.alloc(30, 432987492), Buffer.alloc(30, 4342))
+      //withIndexData(numToBits(BigInt("1234")), numToBits(BigInt("7347"))),
+      //withValueData(numToBits(BigInt("432987492")), numToBits(BigInt("4342")))
     );
 
     const authExistsProof = await users[0].state.generateAuthExistsProof(
       users[0].auths[0].value.authHi
     );
-    console.log(authExistsProof);
+    //console.log(authExistsProof);
     const inputs =
       await zidenjs.stateTransition.stateTransitionWitnessWithPrivateKey(
         users[0].auths[0].privateKey,
@@ -123,11 +122,13 @@ describe("Test State contract", async () => {
         [],
         []
       );
+
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(
       inputs,
       "build/stateTransition.wasm",
       "build/stateTransition.zkey"
     );
+
     const { a, b, c, public } = await callData(proof, publicSignals);
     const tx = await stateContract.transitState(
       public[0],
