@@ -36,7 +36,7 @@ describe("Test MTP Validator contract", async () => {
 
   let blockNumber, blockTimestamp;
   it("Set up global params", async () => {
-    zidenjs = await import("zidenjs");
+    zidenjs = await import("@zidendev/zidenjs");
     deployer = await ethers.getSigner();
     await zidenjs.params.setupParams();
     console.log("Deployer's address : ", deployer.address);
@@ -215,6 +215,8 @@ describe("Test MTP Validator contract", async () => {
           [],
           []
         );
+
+      console.log(inputs);
       const { proof, publicSignals } = await snarkjs.groth16.fullProve(
         inputs,
         "build/stateTransition.wasm",

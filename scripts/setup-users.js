@@ -1,6 +1,7 @@
 const { ethers } = require("hardhat");
 const fs = require("fs");
 const snarkjs = require("snarkjs");
+const { params, OPERATOR, claim, auth, db, state } = require("@zidendev/zidenjs");
 
 const callData = async (proof, publicSignals) => {
   const callData = (
@@ -32,8 +33,7 @@ async function main() {
   const registerContract = Register.attach(addresses.register);
 
   const signers = await ethers.getSigners();
-  const zidenjs = await import("zidenjs");
-  await zidenjs.params.setupParams();
+  await params.setupParams();
 
   const blockNumber = await ethers.provider.getBlockNumber();
   const block = await ethers.provider.getBlock(blockNumber);
@@ -42,17 +42,17 @@ async function main() {
   const numberOfUsers = 6;
   for (let i = 0; i < numberOfUsers; i++) {
     const privateKey = Buffer.alloc(32, i * 11 + 11);
-    const auth = zidenjs.auth.newAuthFromPrivateKey(privateKey);
-    const authsDb = new zidenjs.db.SMTLevelDb("db_test/user" + i + "/auths");
-    const claimsDb = new zidenjs.db.SMTLevelDb("db_test/user" + i + "/claims");
-    const authRevDb = new zidenjs.db.SMTLevelDb(
+    const userAuth = auth.newAuthFromPrivateKey(privateKey);
+    const authsDb = new db.SMTLevelDb("db_test/user" + i + "/auths");
+    const claimsDb = new db.SMTLevelDb("db_test/user" + i + "/claims");
+    const authRevDb = new db.SMTLevelDb(
       "db_test/user" + i + "/authRev"
     );
-    const claimRevDb = new zidenjs.db.SMTLevelDb(
+    const claimRevDb = new db.SMTLevelDb(
       "db_test/user" + i + "/claimRev"
     );
-    const state = await zidenjs.state.State.generateState(
-      [auth],
+    const userState = await state.State.generateState(
+      [userAuth],
       authsDb,
       claimsDb,
       authRevDb,
@@ -63,11 +63,11 @@ async function main() {
       auths: [
         {
           privateKey,
-          value: auth,
+          value: userAuth,
           isRevoked: false,
         },
       ],
-      state,
+      state: userState,
     };
     users.push(user);
   }
@@ -75,7 +75,7 @@ async function main() {
   let query0, query1, query2;
   query0 = {
     slotIndex: 2,
-    operator: zidenjs.OPERATOR.GREATER_THAN,
+    operator: OPERATOR.GREATER_THAN,
     values: [BigInt("10000000")],
     from: 50,
     to: 100,
@@ -86,7 +86,7 @@ async function main() {
 
   query1 = {
     slotIndex: 3,
-    operator: zidenjs.OPERATOR.GREATER_THAN,
+    operator: OPERATOR.GREATER_THAN,
     values: [BigInt("100000000")],
     from: 50,
     to: 100,
@@ -97,7 +97,7 @@ async function main() {
 
   query2 = {
     slotIndex: 6,
-    operator: zidenjs.OPERATOR.GREATER_THAN,
+    operator: OPERATOR.GREATER_THAN,
     values: [BigInt("1000000000")],
     from: 50,
     to: 100,
@@ -113,8 +113,8 @@ async function main() {
     schemaHashFromBigInt,
     withIndexID,
     withSlotData,
-  } = zidenjs.claim;
-  const { numToBits, setBits } = zidenjs.utils;
+  } = claim;
+  const { numToBits, setBits } = utils;
   claim0 = newClaim(
     schemaHashFromBigInt(query0.claimSchema),
     withIndexID(users[3].state.userID),
@@ -152,7 +152,7 @@ async function main() {
   const issueClaims = async (userIndex, claims) => {
     const user = users[userIndex];
     const inputs =
-      await zidenjs.stateTransition.stateTransitionWitnessWithPrivateKey(
+      await stateTransition.stateTransitionWitnessWithPrivateKey(
         user.auths[0].privateKey,
         user.auths[0].value,
         user.state,
@@ -184,7 +184,7 @@ async function main() {
   await issueClaims(1, [claim1]); // issuer: user1, holder: user4, claim: 1
   await issueClaims(2, [claim2]); // issuer: user2, holder: user5, claim: 2
 
-  // const { bitsToNum } = zidenjs.utils;
+  // const { bitsToNum } = utils;
   // const setupAllowedQuery = async (issuerIndex, query, factor) => {
   //   const issuer = users[issuerIndex];
   //   const allowedQuery = {
@@ -215,17 +215,17 @@ async function main() {
   ) => {
     const issuer = users[issuerIndex];
     const holder = users[holderIndex];
-    const kycMTPInput = await zidenjs.queryMTP.kycGenerateQueryMTPInput(
+    const kycMTPInput = await queryMTP.kycGenerateQueryMTPInput(
       claim.hiRaw(),
       issuer.state
     );
     const kycNonRevInput =
-      await zidenjs.queryMTP.kycGenerateNonRevQueryMTPInput(
+      await queryMTP.kycGenerateNonRevQueryMTPInput(
         claim.getRevocationNonce(),
         issuer.state
       );
     const inputs =
-      await zidenjs.queryMTP.holderGenerateQueryMTPWitnessWithPrivateKey(
+      await queryMTP.holderGenerateQueryMTPWitnessWithPrivateKey(
         claim,
         holder.auths[0].privateKey,
         holder.auths[0].value,

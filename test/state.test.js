@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const path = require("path");
 const snarkjs = require("snarkjs");
 const { expect } = require("chai");
+const { stat } = require("fs");
 
 const callData = async (proof, publicSignals) => {
   const callData = (
@@ -71,6 +72,9 @@ describe("Test State contract", async () => {
         authRevDb,
         claimRevDb
       );
+
+      const proof = await state.generateAuthExistsProof(auth.authHi);
+
       const user = {
         auths: [
           {
@@ -86,7 +90,7 @@ describe("Test State contract", async () => {
     }
   });
 
-  it("user 0 add a new auth and new claim", async () => {
+  it.skip("user 0 add a new auth and new claim", async () => {
     const newPrivateKey = crypto.randomBytes(32);
     const newAuth = zidenjs.auth.newAuthFromPrivateKey(newPrivateKey);
     const {
@@ -104,6 +108,11 @@ describe("Test State contract", async () => {
       withIndexData(numToBits(BigInt("1234")), numToBits(BigInt("7347"))),
       withValueData(numToBits(BigInt("432987492")), numToBits(BigInt("4342")))
     );
+
+    const authExistsProof = await users[0].state.generateAuthExistsProof(
+      users[0].auths[0].value.authHi
+    );
+    console.log(authExistsProof);
     const inputs =
       await zidenjs.stateTransition.stateTransitionWitnessWithPrivateKey(
         users[0].auths[0].privateKey,

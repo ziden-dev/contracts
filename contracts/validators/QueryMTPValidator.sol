@@ -6,7 +6,6 @@ import "../lib/GenesisUtil.sol";
 import "../interfaces/IValidator.sol";
 import "../interfaces/IQueryVerifier.sol";
 import "../interfaces/IState.sol";
-import "hardhat/console.sol";
 
 contract QueryMTPValidator is OwnableUpgradeable, IValidator {
     uint256 constant CHALLENGE_INDEX = 2;
