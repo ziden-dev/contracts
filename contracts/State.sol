@@ -61,12 +61,15 @@ contract State is OwnableUpgradeable {
         uint256 state
     );
 
+    uint256 gistRoot = 0;
+
     function initialize(IStateVerifier _verifierContractAddr)
         public
         initializer
     {
         verifier = _verifierContractAddr;
         __Ownable_init();
+        gistRoot = 0;
     }
 
     function setVerifier(address newVerifier) public onlyOwner {
@@ -74,14 +77,19 @@ contract State is OwnableUpgradeable {
     }
 
     function transitState(
+        uint256 newGistRoot,
         uint256 id,
         uint256 oldState,
         uint256 newState,
         bool isOldStateGenesis,
+        uint256 oldGistRoot,
         uint256[2] memory a,
         uint256[2][2] memory b,
         uint256[2] memory c
     ) public {
+
+        require(oldGistRoot == gistRoot, " oldGistRoot not equal gistRoot ");
+
         if (isOldStateGenesis == false) {
             require(
                 identities[id].length > 0,
@@ -113,16 +121,22 @@ contract State is OwnableUpgradeable {
             identities[id].push(IDState(0, 0, oldState));
         }
         require(transitions[newState].id == 0, "newState should not exist");
-        uint256[4] memory inputs = [
+        uint256[6] memory inputs = [
+            newGistRoot,
             id,
             oldState,
             newState,
-            uint256(isOldStateGenesis ? 1 : 0)
+            uint256(isOldStateGenesis ? 1 : 0),
+            oldGistRoot
         ];
-        require(
-            verifier.verifyProof(a, b, c, inputs),
-            "zero-knowledge proof of state transition is not valid haha error here"
-        );
+         require(
+             verifier.verifyProof(a, b, c, inputs),
+             "zero-knowledge proof of state transition is not valid haha error here"
+         );
+
+
+        // update gist root 
+        gistRoot = newGistRoot;
 
         identities[id].push(
             IDState(uint64(block.number), uint64(block.timestamp), newState)
@@ -161,6 +175,10 @@ contract State is OwnableUpgradeable {
             return 0;
         }
         return identities[id][identities[id].length - 1].State;
+    }
+
+    function getGistRoot()   public view returns (uint256) {
+        return gistRoot;
     }
 
     /**

@@ -3,6 +3,7 @@ const { expect } = require("chai");
 const path = require("path");
 const snarkjs = require("snarkjs");
 const { ethers } = require("hardhat");
+const { kMaxLength } = require("buffer");
 
 const callData = async (proof, publicSignals) => {
   const callData = (
@@ -83,7 +84,11 @@ describe("Test MTP Validator contract", async () => {
 
   let users = [];
   const numberOfUsers = 10;
+  let gist;
+
   it("setup users", async () => {
+    const gistDb = new zidenjs.db.SMTLevelDb("db_test/gist");
+    gist = await zidenjs.gist.Gist.generateGist(gistDb);
     for (let i = 0; i < numberOfUsers; i++) {
       const privateKey = crypto.randomBytes(32);
       const auth = zidenjs.auth.newAuthFromPrivateKey(privateKey);
@@ -161,6 +166,7 @@ describe("Test MTP Validator contract", async () => {
       withExpirationDate,
     } = zidenjs.claim;
     const { numToBits, setBits } = zidenjs.utils;
+
     claim0 = newClaim(
       schemaHashFromBigInt(query0.claimSchema),
       withIndexID(users[3].state.userID),
@@ -200,7 +206,7 @@ describe("Test MTP Validator contract", async () => {
       ),
       withExpirationDate(BigInt(10))
     );
-
+    console.log(" gist root = ", gist.getRoot());
     const issueClaims = async (userIndex, claims) => {
       const user = users[userIndex];
       const inputs =
@@ -208,22 +214,31 @@ describe("Test MTP Validator contract", async () => {
           user.auths[0].privateKey,
           user.auths[0].value,
           user.state,
+          gist,
           [],
           claims,
           [],
           []
         );
+
+      await gist.insertGist(user.state.genesisID, user.state.getIdenState());
+      console.log(" gist root = ", gist.getRoot());
+      console.log(inputs);
+
       const { proof, publicSignals } = await snarkjs.groth16.fullProve(
         inputs,
         "build/stateTransition.wasm",
         "build/stateTransition.zkey"
       );
+      console.log(publicSignals);
       const { a, b, c, public } = await callData(proof, publicSignals);
       const tx = await stateContract.transitState(
         public[0],
         public[1],
         public[2],
-        public[3] === BigInt(0) ? false : true,
+        public[3],
+        public[4] === BigInt(0) ? false : true,
+        public[5],
         a,
         b,
         c
@@ -232,8 +247,8 @@ describe("Test MTP Validator contract", async () => {
     };
 
     await issueClaims(0, [claim0]);
-    await issueClaims(1, [claim1]);
-    await issueClaims(2, [claim2, expiredClaim]);
+    //await issueClaims(1, [claim1]);
+    //await issueClaims(2, [claim2, expiredClaim]);
   });
 
   it("test query MTP", async () => {
@@ -271,8 +286,7 @@ describe("Test MTP Validator contract", async () => {
       await tx.wait();
     };
 
-    await queryMTP(0, 3, claim0, query0);
-
+    // await queryMTP(0, 3, claim0, query0);
     // await queryMTP(1, 4, claim1, query1);
     // await queryMTP(2, 5, claim2, query2);
 

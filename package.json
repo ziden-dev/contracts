@@ -2,7 +2,7 @@
   "name": "@zidendev/ziden-contracts",
   "devDependencies": {
     "@openzeppelin/contracts": "^4.8.0",
-    "hardhat": "^2.11.2"
+    "hardhat": "^2.14.0"
   },
   "dependencies": {
     "@nomicfoundation/hardhat-toolbox": "^2.0.0",
