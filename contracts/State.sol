@@ -85,7 +85,7 @@ contract State is OwnableUpgradeable {
         if (isOldStateGenesis == false) {
             require(
                 identities[id].length > 0,
-                "there should be at one state for identity in smart contract when isOldStateGenesis == 0"
+                "there should be at least one state for identity in smart contract when isOldStateGenesis == 0"
             );
 
             IDState memory oldIDState = identities[id][
@@ -102,7 +102,7 @@ contract State is OwnableUpgradeable {
         } else {
             require(
                 identities[id].length == 0,
-                "There should be no states for identity in smart contract when isOldStateGenesis == 0"
+                "There should be no states for identity in smart contract when isOldStateGenesis == 1"
             );
             require(transitions[oldState].id == 0, "oldState should not exist");
 

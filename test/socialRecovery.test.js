@@ -242,9 +242,65 @@ describe("Full test for MTP and Sig validator", async () => {
       c
     );
   });
+  let backupPrvKey, backupPubKey, backupAuthClaim;
 
-  let values, challenge, hashFunction, queryMTPInput, querySigInput;
-  it("Generate calldata for query MTP with EQUAL operator", async () => {
+  it("Social recovery", async () => {
+    console.log(holder1AuthClaim.getRevocationNonce());
+    backupPrvKey = crypto.randomBytes(32);
+    backupPubKey = eddsa.prv2pub(backupPrvKey);
+
+    backupAuthClaim = await zidenjs.claim.authClaim.newAuthClaimFromPublicKey(
+      F.toObject(backupPubKey[0]),
+      F.toObject(backupPubKey[1])
+    );
+
+    let backupStateTransitionInput =
+      await await zidenjs.witness.stateTransition.stateTransitionWitness(
+        eddsa,
+        holder1Prvkey,
+        holder1AuthClaim,
+        holder1Tree,
+        [backupAuthClaim],
+        [0],
+        hasher
+      );
+    const { proof, publicSignals } = await snarkjs.groth16.fullProve(
+      backupStateTransitionInput,
+      path.resolve("./build/stateTransition/stateTransition.wasm"),
+      path.resolve("./build/stateTransition/state_final.zkey")
+    );
+    const callData = (
+      await snarkjs.groth16.exportSolidityCallData(proof, publicSignals)
+    )
+      .toString()
+      .split(",")
+      .map((e) => {
+        return e.replaceAll(/([\[\]\s\"])/g, "");
+      });
+    let a,
+      b = [],
+      c,
+      publicInp;
+    a = callData.slice(0, 2).map((e) => BigInt(e));
+    b[0] = callData.slice(2, 4).map((e) => BigInt(e));
+    b[1] = callData.slice(4, 6).map((e) => BigInt(e));
+    c = callData.slice(6, 8).map((e) => BigInt(e));
+    publicInp = callData.slice(8, callData.length).map((e) => BigInt(e));
+
+    await state.transitState(
+      publicInp[0],
+      publicInp[1],
+      publicInp[2],
+      publicInp[3],
+      a,
+      b,
+      c
+    );
+  });
+
+  let values, challenge, hashFunction, queryMTPInput;
+
+  it("Generate calldata for EQUAL operator query MTP with old auth claim ", async () => {
     values = [BigInt(19941031)];
     challenge = BigInt("1390849295786071768276380950238675083608645509734");
     hashFunction = await zidenjs.global.buildFMTHashFunction(hash0, F);
@@ -279,7 +335,6 @@ describe("Full test for MTP and Sig validator", async () => {
         hashFunction,
         F
       );
-    console.log(zidenjs.utils.bitsToNum(issuerClaim.getSubjectFlag()));
 
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(
       queryMTPInput,
@@ -304,40 +359,40 @@ describe("Full test for MTP and Sig validator", async () => {
     c = callData.slice(6, 8).map((e) => BigInt(e));
     publicInp = callData.slice(8, callData.length).map((e) => BigInt(e));
 
-    // console.log(await testContract.functions.verifyMTP(a, b, c, publicInp));
-    // console.log("Calldata for query MTP : ");
-    // console.log(callData);
-    // console.log(
-    //   "=============================================================================="
-    // );
+    console.log(await testContract.functions.verifyMTP(a, b, c, publicInp));
+    console.log("Calldata for query MTP : ");
+    console.log(callData);
+    console.log(
+      "=============================================================================="
+    );
   });
 
-  it("Generate calldata for query Sig with EQUAL operator", async () => {
-    let kycQuerySigInput =
-      await zidenjs.witness.querySig.kycGenerateQuerySigInput(
-        eddsa,
-        hasher,
-        issuerPrvkey,
-        issuerAuthClaim,
-        issuerClaim,
-        issuerTree
-      );
-    let kycQuerySigNonRevInput =
-      await zidenjs.witness.querySig.kycGenerateQuerySigNonRevInput(
+  it("Generate calldata for EQUAL operator query MTP with new auth claim ", async () => {
+    values = [BigInt(19941031)];
+    challenge = BigInt("1390849295786071768276380950238675083608645509734");
+    hashFunction = await zidenjs.global.buildFMTHashFunction(hash0, F);
+
+    let kycQueryInput = await zidenjs.witness.queryMTP.kycGenerateQueryMTPInput(
+      issuerClaim.hiRaw(issuerTree.hasher),
+      issuerTree
+    );
+
+    let kycNonRevInput =
+      await zidenjs.witness.queryMTP.kycGenerateNonRevQueryMTPInput(
         issuerClaim.getRevocationNonce(),
         issuerTree
       );
 
-    querySigInput =
-      await zidenjs.witness.querySig.holderGenerateQuerySigWitness(
+    queryMTPInput =
+      await zidenjs.witness.queryMTP.holderGenerateQueryMTPWitness(
         issuerClaim,
         eddsa,
-        holder1Prvkey,
-        holder1AuthClaim,
+        backupPrvKey,
+        backupAuthClaim,
         challenge,
         holder1Tree,
-        kycQuerySigInput,
-        kycQuerySigNonRevInput,
+        kycQueryInput,
+        kycNonRevInput,
         3,
         1,
         values,
@@ -347,10 +402,11 @@ describe("Full test for MTP and Sig validator", async () => {
         hashFunction,
         F
       );
+
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(
-      querySigInput,
-      path.resolve("build/querySig/credentialAtomicQuerySig.wasm"),
-      path.resolve("build/querySig/querySig_final.zkey")
+      queryMTPInput,
+      path.resolve("build/queryMTP/credentialAtomicQueryMTP.wasm"),
+      path.resolve("build/queryMTP/queryMTP_final.zkey")
     );
     const callData = (
       await snarkjs.groth16.exportSolidityCallData(proof, publicSignals)
@@ -369,7 +425,12 @@ describe("Full test for MTP and Sig validator", async () => {
     b[1] = callData.slice(4, 6).map((e) => BigInt(e));
     c = callData.slice(6, 8).map((e) => BigInt(e));
     publicInp = callData.slice(8, callData.length).map((e) => BigInt(e));
-    // console.log(publicInp);
-    // console.log(await testContract.functions.verifySig(a, b, c, publicInp));
+
+    console.log(await testContract.functions.verifyMTP(a, b, c, publicInp));
+    console.log("Calldata for query MTP : ");
+    console.log(callData);
+    console.log(
+      "=============================================================================="
+    );
   });
 });

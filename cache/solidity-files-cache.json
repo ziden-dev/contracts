@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/home/tanpx/Desktop/ziden-dev/contracts/contracts/State.sol": {
-      "lastModificationDate": 1667546022988,
-      "contentHash": "5fab921cbf1836e80422142cca3aca11",
+      "lastModificationDate": 1671250092857,
+      "contentHash": "97ea34c82e0b7b9d3cbaf09b19008da5",
       "sourceName": "contracts/State.sol",
       "solcConfig": {
         "version": "0.8.7",
@@ -228,8 +228,8 @@
       ]
     },
     "/home/tanpx/Desktop/ziden-dev/contracts/contracts/lib/GenesisUtil.sol": {
-      "lastModificationDate": 1666081001387,
-      "contentHash": "98ca99e62db4802f507913cc9d9694fe",
+      "lastModificationDate": 1672135760957,
+      "contentHash": "9546bcae4650d086be0a30afa5d4f893",
       "sourceName": "contracts/lib/GenesisUtil.sol",
       "solcConfig": {
         "version": "0.8.7",
@@ -256,8 +256,7 @@
         }
       },
       "imports": [
-        "solidity-bytes-utils/contracts/BytesLib.sol",
-        "hardhat/console.sol"
+        "solidity-bytes-utils/contracts/BytesLib.sol"
       ],
       "versionPragmas": [
         "0.8.7"
@@ -484,8 +483,8 @@
       ]
     },
     "/home/tanpx/Desktop/ziden-dev/contracts/contracts/test/TestValidator.sol": {
-      "lastModificationDate": 1670227332597,
-      "contentHash": "c31a01cf30716e71ab8253f9e5085b79",
+      "lastModificationDate": 1676359793379,
+      "contentHash": "5a6113bbb0ad85831530f140e12ba8d6",
       "sourceName": "contracts/test/TestValidator.sol",
       "solcConfig": {
         "version": "0.8.7",
@@ -522,8 +521,8 @@
       ]
     },
     "/home/tanpx/Desktop/ziden-dev/contracts/contracts/validators/QuerySigValidator.sol": {
-      "lastModificationDate": 1670227245381,
-      "contentHash": "35fac90249fe73ab06cac35e1d20ab48",
+      "lastModificationDate": 1676360640746,
+      "contentHash": "07a51e182279ae12ed120e19b1705493",
       "sourceName": "contracts/validators/QuerySigValidator.sol",
       "solcConfig": {
         "version": "0.8.7",
@@ -554,8 +553,7 @@
         "../lib/GenesisUtil.sol",
         "../interfaces/IValidator.sol",
         "../interfaces/IState.sol",
-        "../interfaces/IQueryVerifier.sol",
-        "hardhat/console.sol"
+        "../interfaces/IQueryVerifier.sol"
       ],
       "versionPragmas": [
         "0.8.7"
@@ -565,8 +563,8 @@
       ]
     },
     "/home/tanpx/Desktop/ziden-dev/contracts/contracts/validators/QueryMTPValidator.sol": {
-      "lastModificationDate": 1670215526812,
-      "contentHash": "683077119ebccd5ac14ef0373d5ba4ee",
+      "lastModificationDate": 1676360649282,
+      "contentHash": "ba2f05d00180c60a74cb859e646cc452",
       "sourceName": "contracts/validators/QueryMTPValidator.sol",
       "solcConfig": {
         "version": "0.8.7",
@@ -598,7 +596,8 @@
         "../interfaces/IValidator.sol",
         "../interfaces/IQueryVerifier.sol",
         "../interfaces/IState.sol",
-        "solidity-bytes-utils/contracts/BytesLib.sol"
+        "solidity-bytes-utils/contracts/BytesLib.sol",
+        "hardhat/console.sol"
       ],
       "versionPragmas": [
         "0.8.7"
